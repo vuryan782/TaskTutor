@@ -67,7 +67,7 @@ TaskTutor/
 
 ---
 
-## ▶️ Running the Demo
+##  Running the Demo
 
 ### Development Mode
 To run the interactive CLI demo directly from TypeScript:
@@ -102,7 +102,7 @@ npm start
 
 ---
 
-## 🧠 Notes
+##  Notes
 
 - Ensure your **Supabase table** `users_public` exists:
   ```sql
