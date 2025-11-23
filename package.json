@@ -1,0 +1,32 @@
+{
+  "name": "tasktutor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "ts-node src/demo.ts",
+    "build": "tsc",
+    "start": "node dist/demo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuryan782/TaskTutor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vuryan782/TaskTutor/issues"
+  },
+  "homepage": "https://github.com/vuryan782/TaskTutor#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.84.0",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
