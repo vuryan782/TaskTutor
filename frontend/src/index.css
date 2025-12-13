@@ -1659,6 +1659,7 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
+
 }
 
 :root {
@@ -1964,3 +1965,109 @@ html {
     opacity: .5;
   }
 }
+
+/* Accessibility: High Contrast */
+.a11y-high-contrast {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.a11y-high-contrast .bg-white {
+  background-color: #000 !important;
+}
+
+.a11y-high-contrast .text-gray-500,
+.a11y-high-contrast .text-gray-600,
+.a11y-high-contrast .text-gray-700,
+.a11y-high-contrast .text-gray-900 {
+  color: #fff !important;
+}
+
+.a11y-high-contrast .border-gray-200,
+.a11y-high-contrast .border-gray-300 {
+  border-color: #fff !important;
+}
+
+/* Accessibility: Large Text */
+.a11y-large-text {
+  font-size: 18px;
+}
+
+.a11y-large-text * {
+  font-size: 1em;
+}
+
+/* Accessibility: Reduced Motion */
+
+.a11y-reduce-motion *,
+.a11y-reduce-motion *::before,
+.a11y-reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* === High Contrast Mode === */
+.a11y-high-contrast {
+  --background: #000;
+  --foreground: #fff;
+  --card: #000;
+  --card-foreground: #fff;
+  --sidebar: #000;
+  --sidebar-foreground: #fff;
+  --border: #ffffff;
+}
+
+/* Make main app area dark with light text */
+.a11y-high-contrast,
+.a11y-high-contrast body,
+.a11y-high-contrast .min-h-screen {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* Override common light backgrounds in high contrast */
+.a11y-high-contrast .bg-white,
+.a11y-high-contrast .bg-gray-50,
+.a11y-high-contrast .bg-amber-50,
+.a11y-high-contrast .bg-amber-100,
+.a11y-high-contrast .bg-blue-50,
+.a11y-high-contrast .bg-green-50,
+.a11y-high-contrast .bg-purple-50,
+.a11y-high-contrast .bg-indigo-50,
+.a11y-high-contrast .bg-gradient-to-r,
+.a11y-high-contrast .bg-gradient-to-br {
+  background-image: none !important;
+  background-color: #000 !important;
+  border-color: #ffffff !important;
+}
+
+/* Make all text white by default in high contrast */
+.a11y-high-contrast * {
+  color: #fff !important;
+}
+
+/* Keep good semantic colors for positive numbers if you like */
+.a11y-high-contrast .text-green-600,
+.a11y-high-contrast .text-amber-700 {
+  color: #fff !important; /* or keep them if you prefer */
+}
+
+/* Make SVG icons white */
+.a11y-high-contrast svg {
+  stroke: #fff !important;
+  fill: #fff !important;
+}
+
+.a11y-high-contrast header {
+  background-color: #000 !important;
+  border-color: #ffffff !important;
+}
+
+/* High contrast: fixes the header card contrast */
+.a11y-high-contrast .hero-card {
+  background-color: #000 !important;
+  border-color: #fff !important;
+  color: #fff !important;
+}
+

@@ -91,9 +91,9 @@ function LoginPage({ onLogin }) {
 function HomePage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back! 👋</h1>
-        <p className="text-gray-600">Here's your study overview for today</p>
+      <div className="hero-card space-y-2">
+        <h1 className="text-3xl font-bold">Welcome back! 👋</h1>
+        <p>Here's your study overview for today</p>
       </div>
 
       {/* Quick Stats */}
@@ -566,6 +566,22 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Accessibility state
+  const [accessibility, setAccessibility] = useState({
+    highContrast: false,
+    largeText: false,
+    reduceMotion: false,
+  });
+
+  const rootClasses = [
+    "min-h-screen flex",
+    "bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50",
+    accessibility.highContrast ? "a11y-high-contrast" : "",
+    accessibility.largeText ? "a11y-large-text" : "",
+    accessibility.reduceMotion ? "a11y-reduce-motion" : "",
+  ].join(" ");
+
+
   const menuItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'materials', label: 'Materials', icon: BookOpen },
@@ -592,7 +608,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
+    <div className={rootClasses}>
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
         {/* Logo */}
@@ -657,7 +673,8 @@ export default function App() {
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-6">
+            {/* Left side: mobile sidebar toggle + title */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -665,7 +682,62 @@ export default function App() {
               >
                 <Menu className="w-6 h-6 text-gray-600" />
               </button>
+              <span className="hidden lg:inline text-sm text-gray-600">
+                Task Tutor Dashboard
+              </span>
             </div>
+
+            {/* Center: Accessibility controls */}
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500 mr-1">
+                Accessibility:
+              </span>
+             <button
+                onClick={() => 
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    highContrast: !prev.highContrast,
+                  }))
+                }
+                className={`px-4 py-2 rounded-full text-sm ${
+                  accessibility.highContrast ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                High contrast
+              </button>
+              <button
+                onClick={() =>
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    largeText: !prev.largeText,
+                  }))
+                }
+                className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                  accessibility.largeText
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Large text
+              </button>
+              <button
+                onClick={() =>
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    reduceMotion: !prev.reduceMotion,
+                  }))
+                }
+                className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                  accessibility.reduceMotion
+                    ? "bg-emerald-600 text-white border-emerald-600"
+                    : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Reduce motion
+              </button>
+            </div>
+
+            {/* Right side: notifications + avatar */}
             <div className="flex items-center gap-4">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Bell className="w-6 h-6 text-gray-600" />
@@ -679,6 +751,7 @@ export default function App() {
             </div>
           </div>
         </header>
+
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto p-8">
