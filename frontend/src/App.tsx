@@ -96,6 +96,75 @@ function HomePage() {
         <p>Here's your study overview for today</p>
       </div>
 
+      {/* BASIC STATS SECTION */}
+      <section className="space-y-4" aria-labelledby="study-overview-heading">
+        <div className="flex items-center justify-between">
+          <h2 id="study-overview-heading" className="text-lg font-semibold text-gray-900">
+            Study Overview
+          </h2>
+          <p className="text-xs text-gray-500">Your recent study performance</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Total Time */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs text-gray-500 mb-1">Total Study Time</p>
+            <p className="text-2xl font-bold text-gray-900">3h 20m</p>
+            <p className="text-xs text-gray-600 mt-1">Across 12 sessions</p>
+          </div>
+
+          {/* Today */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs text-gray-500 mb-1">Today&apos;s Progress</p>
+            <p className="text-2xl font-bold text-gray-900">45m</p>
+            <p className="text-xs text-gray-600 mt-1">Daily Goal: 60m (75%)</p>
+
+            <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }} />
+            </div>
+          </div>
+
+          {/* Weekly */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs text-gray-500 mb-1">This Week</p>
+            <p className="text-2xl font-bold text-gray-900">5h 10m</p>
+            <p className="text-xs text-gray-600 mt-1">Weekly Goal: 6h (86%)</p>
+            <p className="text-xs text-gray-600 mt-2">
+              Current Streak: <span className="text-green-700 font-semibold">4 days</span>
+            </p>
+          </div>
+
+        </div>
+
+        {/* Mini Chart */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-gray-500 mb-3">Last 7 Days</p>
+
+          <div className="flex items-end gap-2 h-24">
+            {[
+              { label: 'Mon', height: '35%' },
+              { label: 'Tue', height: '60%' },
+              { label: 'Wed', height: '80%' },
+              { label: 'Thu', height: '45%' },
+              { label: 'Fri', height: '70%' },
+              { label: 'Sat', height: '50%' },
+              { label: 'Sun', height: '20%' }
+            ].map((day) => (
+              <div key={day.label} className="flex flex-col items-center flex-1">
+                <div
+                  className="w-4 bg-blue-500 rounded-t-full"
+                  style={{ height: day.height }}
+                />
+                <span className="mt-1 text-[10px] text-gray-600">{day.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
