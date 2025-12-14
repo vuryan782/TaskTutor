@@ -118,8 +118,8 @@ function HomePage() {
           {/* Today */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Today&apos;s Progress</p>
-            <p className="text-2xl font-bold text-gray-900">45m</p>
-            <p className="text-xs text-gray-600 mt-1">Daily Goal: 60m (75%)</p>
+            <p className="text-2xl font-bold text-gray-900">0m</p>
+            <p className="text-xs text-gray-600 mt-1">Daily Goal: 60m (0%)</p>
 
             <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }} />
