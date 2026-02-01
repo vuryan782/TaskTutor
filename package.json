@@ -22,9 +22,11 @@
   },
   "homepage": "https://github.com/vuryan782/TaskTutor#readme",
   "dependencies": {
+    "@prisma/client": "^7.3.0",
     "@supabase/supabase-js": "^2.84.0",
     "dotenv": "^17.2.3",
-    "lucide-react": "^0.561.0"
+    "lucide-react": "^0.561.0",
+    "prisma": "^7.3.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

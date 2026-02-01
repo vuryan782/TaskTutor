@@ -4,37 +4,387 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String?  @unique
-  tasks     Task[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ai_feedback {
+  id                  String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String          @db.Uuid
+  session_id          String?         @db.Uuid
+  feedback_type       String?         @db.VarChar(50)
+  summary             String
+  detailed_feedback   Json?
+  weak_topics         Json?
+  strong_topics       Json?
+  suggested_materials String[]        @db.Uuid
+  performance_score   Int?
+  improvement_tips    Json?
+  created_at          DateTime?       @default(now()) @db.Timestamptz(6)
+  study_sessions      study_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users               users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "idx_ai_feedback_created")
+  @@index([session_id], map: "idx_ai_feedback_session")
+  @@index([feedback_type], map: "idx_ai_feedback_type")
+  @@index([user_id], map: "idx_ai_feedback_user")
 }
 
-model Task {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model calendar_events {
+  id                   String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id              String    @db.Uuid
+  title                String    @db.VarChar(255)
+  description          String?
+  event_type           String?   @db.VarChar(50)
+  task_id              String?   @db.Uuid
+  start_time           DateTime  @db.Timestamptz(6)
+  end_time             DateTime? @db.Timestamptz(6)
+  all_day              Boolean?  @default(false)
+  is_recurring         Boolean?  @default(false)
+  recurrence_rule      String?   @db.VarChar(255)
+  external_calendar_id String?   @db.VarChar(255)
+  synced_at            DateTime? @db.Timestamptz(6)
+  created_at           DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime? @default(now()) @db.Timestamptz(6)
+  tasks                tasks?    @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  title       String
-  description String?
-  dueDate     DateTime?
-  priority    Int      @default(2)
-  status      TaskStatus @default(TODO)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, status])
-  @@index([userId, dueDate])
+  @@index([start_time], map: "idx_calendar_start")
+  @@index([event_type], map: "idx_calendar_type")
+  @@index([user_id], map: "idx_calendar_user")
 }
 
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  DONE
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model goals {
+  id               String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String      @db.Uuid
+  title            String      @db.VarChar(255)
+  description      String?
+  goal_type        String?     @db.VarChar(20)
+  target_value     Int
+  current_progress Int?        @default(0)
+  unit             String?     @db.VarChar(50)
+  start_date       DateTime    @db.Date
+  end_date         DateTime    @db.Date
+  status           String?     @default("active") @db.VarChar(20)
+  created_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  users            users       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  reminders        reminders[]
+
+  @@index([start_date, end_date], map: "idx_goals_dates")
+  @@index([status], map: "idx_goals_status")
+  @@index([user_id], map: "idx_goals_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model group_session_participants {
+  id                   String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  session_id           String               @db.Uuid
+  user_id              String               @db.Uuid
+  joined_at            DateTime?            @default(now()) @db.Timestamptz(6)
+  left_at              DateTime?            @db.Timestamptz(6)
+  status               String?              @default("invited") @db.VarChar(20)
+  group_study_sessions group_study_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, user_id])
+  @@index([session_id], map: "idx_participants_session")
+  @@index([status], map: "idx_participants_status")
+  @@index([user_id], map: "idx_participants_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model group_study_sessions {
+  id                         String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  host_user_id               String                       @db.Uuid
+  title                      String                       @db.VarChar(255)
+  description                String?
+  scheduled_at               DateTime                     @db.Timestamptz(6)
+  duration_minutes           Int?
+  max_participants           Int?                         @default(10)
+  status                     String?                      @default("scheduled") @db.VarChar(20)
+  shared_material_ids        String[]                     @db.Uuid
+  created_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  group_session_participants group_session_participants[]
+  users                      users                        @relation(fields: [host_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  peer_feedback              peer_feedback[]
+
+  @@index([host_user_id], map: "idx_group_sessions_host")
+  @@index([scheduled_at], map: "idx_group_sessions_scheduled")
+  @@index([status], map: "idx_group_sessions_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model peer_feedback {
+  id                                      String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  group_session_id                        String               @db.Uuid
+  from_user_id                            String               @db.Uuid
+  to_user_id                              String?              @db.Uuid
+  rating                                  Int?
+  comment                                 String?
+  is_anonymous                            Boolean?             @default(false)
+  created_at                              DateTime?            @default(now()) @db.Timestamptz(6)
+  users_peer_feedback_from_user_idTousers users                @relation("peer_feedback_from_user_idTousers", fields: [from_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  group_study_sessions                    group_study_sessions @relation(fields: [group_session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_peer_feedback_to_user_idTousers   users?               @relation("peer_feedback_to_user_idTousers", fields: [to_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([from_user_id], map: "idx_feedback_from")
+  @@index([group_session_id], map: "idx_feedback_session")
+  @@index([to_user_id], map: "idx_feedback_to")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model progress_tracking {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         String    @db.Uuid
+  date            DateTime  @db.Date
+  study_minutes   Int?      @default(0)
+  tasks_completed Int?      @default(0)
+  quizzes_taken   Int?      @default(0)
+  average_score   Decimal?  @db.Decimal(5, 2)
+  is_goal_met     Boolean?  @default(false)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, date])
+  @@index([user_id, date(sort: Desc)], map: "idx_progress_user_date")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model quiz_questions {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  quiz_id        String    @db.Uuid
+  question_text  String
+  question_type  String?   @default("multiple_choice") @db.VarChar(20)
+  option_a       String?
+  option_b       String?
+  option_c       String?
+  option_d       String?
+  correct_answer String?   @db.VarChar(10)
+  explanation    String?
+  points         Int?      @default(1)
+  order_index    Int?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  quizzes        quizzes   @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([quiz_id, order_index], map: "idx_questions_order")
+  @@index([quiz_id], map: "idx_questions_quiz")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model quizzes {
+  id                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id            String           @db.Uuid
+  material_id        String?          @db.Uuid
+  title              String           @db.VarChar(255)
+  description        String?
+  difficulty         String?          @default("medium") @db.VarChar(20)
+  total_questions    Int?             @default(0)
+  time_limit_minutes Int?
+  created_at         DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?        @default(now()) @db.Timestamptz(6)
+  quiz_questions     quiz_questions[]
+  study_materials    study_materials? @relation(fields: [material_id], references: [id], onUpdate: NoAction)
+  users              users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  study_sessions     study_sessions[]
+
+  @@index([material_id], map: "idx_quizzes_material")
+  @@index([user_id], map: "idx_quizzes_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model reminders {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String    @db.Uuid
+  title         String    @db.VarChar(255)
+  message       String?
+  reminder_type String?   @db.VarChar(50)
+  task_id       String?   @db.Uuid
+  goal_id       String?   @db.Uuid
+  remind_at     DateTime  @db.Timestamptz(6)
+  is_sent       Boolean?  @default(false)
+  sent_at       DateTime? @db.Timestamptz(6)
+  send_email    Boolean?  @default(true)
+  send_push     Boolean?  @default(true)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  goals         goals?    @relation(fields: [goal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tasks         tasks?    @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([is_sent, remind_at], map: "idx_reminders_sent")
+  @@index([remind_at], map: "idx_reminders_time")
+  @@index([user_id], map: "idx_reminders_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model study_materials {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String    @db.Uuid
+  title             String    @db.VarChar(255)
+  description       String?
+  file_type         String?   @db.VarChar(50)
+  file_url          String?
+  file_size_bytes   BigInt?
+  processing_status String?   @default("pending") @db.VarChar(20)
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  quizzes           quizzes[]
+  users             users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([processing_status], map: "idx_materials_status")
+  @@index([file_type], map: "idx_materials_type")
+  @@index([user_id], map: "idx_materials_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model study_sessions {
+  id               String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id          String        @db.Uuid
+  session_type     String?       @db.VarChar(50)
+  quiz_id          String?       @db.Uuid
+  started_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  ended_at         DateTime?     @db.Timestamptz(6)
+  duration_minutes Int?
+  score            Int?
+  total_possible   Int?
+  percentage       Decimal?      @db.Decimal(5, 2)
+  created_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  ai_feedback      ai_feedback[]
+  quizzes          quizzes?      @relation(fields: [quiz_id], references: [id], onUpdate: NoAction)
+  users            users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([started_at], map: "idx_sessions_started")
+  @@index([session_type], map: "idx_sessions_type")
+  @@index([user_id], map: "idx_sessions_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tags {
+  id         String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String      @db.Uuid
+  name       String      @db.VarChar(100)
+  color      String?     @default("#3B82F6") @db.VarChar(7)
+  created_at DateTime?   @default(now()) @db.Timestamptz(6)
+  users      users       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  task_tags  task_tags[]
+
+  @@unique([user_id, name])
+  @@index([user_id], map: "idx_tags_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model task_tags {
+  task_id    String    @db.Uuid
+  tag_id     String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  tags       tags      @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tasks      tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([task_id, tag_id])
+  @@index([tag_id], map: "idx_task_tags_tag")
+  @@index([task_id], map: "idx_task_tags_task")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tasks {
+  id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String            @db.Uuid
+  title             String            @db.VarChar(255)
+  description       String?
+  priority          String?           @default("medium") @db.VarChar(20)
+  status            String?           @default("pending") @db.VarChar(20)
+  due_date          DateTime?         @db.Timestamptz(6)
+  completed_at      DateTime?         @db.Timestamptz(6)
+  created_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  ai_priority_score Int?              @default(0)
+  calendar_events   calendar_events[]
+  reminders         reminders[]
+  task_tags         task_tags[]
+  users             users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([due_date], map: "idx_tasks_due_date")
+  @@index([ai_priority_score], map: "idx_tasks_priority")
+  @@index([status], map: "idx_tasks_status")
+  @@index([user_id], map: "idx_tasks_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_profiles {
+  id                         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                    String    @unique @db.Uuid
+  study_streak               Int?      @default(0)
+  total_study_hours          Int?      @default(0)
+  preferred_study_time       String?   @db.VarChar(20)
+  timezone                   String?   @default("UTC") @db.VarChar(50)
+  daily_goal_minutes         Int?      @default(60)
+  weekly_goal_minutes        Int?      @default(420)
+  theme                      String?   @default("light") @db.VarChar(20)
+  email_notifications        Boolean?  @default(true)
+  push_notifications         Boolean?  @default(true)
+  font_size                  String?   @default("medium") @db.VarChar(20)
+  high_contrast              Boolean?  @default(false)
+  screen_reader_enabled      Boolean?  @default(false)
+  keyboard_shortcuts_enabled Boolean?  @default(true)
+  auto_save                  Boolean?  @default(true)
+  created_at                 DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime? @default(now()) @db.Timestamptz(6)
+  users                      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_user_profiles_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                                              String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                                           String                       @unique @db.VarChar(255)
+  password_hash                                   String                       @db.VarChar(255)
+  username                                        String                       @unique @db.VarChar(100)
+  full_name                                       String?                      @db.VarChar(255)
+  avatar_url                                      String?
+  phone                                           String?                      @db.VarChar(20)
+  created_at                                      DateTime?                    @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime?                    @default(now()) @db.Timestamptz(6)
+  last_login                                      DateTime?                    @db.Timestamptz(6)
+  is_active                                       Boolean?                     @default(true)
+  is_verified                                     Boolean?                     @default(false)
+  ai_feedback                                     ai_feedback[]
+  calendar_events                                 calendar_events[]
+  goals                                           goals[]
+  group_session_participants                      group_session_participants[]
+  group_study_sessions                            group_study_sessions[]
+  peer_feedback_peer_feedback_from_user_idTousers peer_feedback[]              @relation("peer_feedback_from_user_idTousers")
+  peer_feedback_peer_feedback_to_user_idTousers   peer_feedback[]              @relation("peer_feedback_to_user_idTousers")
+  progress_tracking                               progress_tracking[]
+  quizzes                                         quizzes[]
+  reminders                                       reminders[]
+  study_materials                                 study_materials[]
+  study_sessions                                  study_sessions[]
+  tags                                            tags[]
+  tasks                                           tasks[]
+  user_profiles                                   user_profiles?
+
+  @@index([email], map: "idx_users_email")
+  @@index([username], map: "idx_users_username")
 }
