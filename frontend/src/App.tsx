@@ -1,14 +1,81 @@
-import { useState } from 'react';
-import { BookOpen, Home, Upload, FileQuestion, Calendar, TrendingUp, Users, Menu, X, LogOut, Bell, Search, Plus, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Home,
+  Upload,
+  FileQuestion,
+  Calendar,
+  TrendingUp,
+  Users,
+  Menu,
+  LogOut,
+  Bell,
+  Search,
+  Plus,
+  ChevronRight,
+} from "lucide-react";
+
+import { supabase } from "./supabaseClient";
 
 // Login Page Component
-function LoginPage({ onLogin }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  // NEW: mode (sign in vs sign up) + loading + message
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string>("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    setMsg("");
+    setLoading(true);
+
+    try {
+      if (mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        setMsg("Logged in!");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) throw error;
+
+        // Supabase may require email confirmation depending on project settings
+        setMsg("Account created! If email confirmation is on, check your inbox.");
+      }
+    } catch (err: any) {
+      setMsg(err?.message ?? "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setMsg("Enter your email first, then click Forgot password.");
+      return;
+    }
+    setMsg("");
+    setLoading(true);
+    try {
+      // For local dev, redirect back to your app
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "http://localhost:5173",
+      });
+      if (error) throw error;
+      setMsg("Password reset email sent (check your inbox).");
+    } catch (err: any) {
+      setMsg(err?.message ?? "Could not send reset email");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,12 +90,27 @@ function LoginPage({ onLogin }) {
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Welcome Back</h2>
-          <p className="text-gray-600 text-center mb-8">Sign in to continue your learning journey</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+            {mode === "signin" ? "Welcome Back" : "Create Account"}
+          </h2>
+          <p className="text-gray-600 text-center mb-8">
+            {mode === "signin"
+              ? "Sign in to continue your learning journey"
+              : "Sign up to start your learning journey"}
+          </p>
+
+          {/* NEW: message area */}
+          {msg ? (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              {msg}
+            </div>
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -40,7 +122,9 @@ function LoginPage({ onLogin }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -48,38 +132,60 @@ function LoginPage({ onLogin }) {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="••••••••"
                 required
+                minLength={6}
               />
             </div>
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded" />
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                />
                 <span className="text-gray-700">Remember me</span>
               </label>
-              <button type="button" className="text-blue-600 hover:text-blue-700">
+
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-blue-600 hover:text-blue-700"
+                disabled={loading}
+              >
                 Forgot password?
               </button>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium disabled:opacity-60"
             >
-              Sign In
+              {loading
+                ? "Please wait..."
+                : mode === "signin"
+                ? "Sign In"
+                : "Sign Up"}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-8">
-            Don't have an account?{' '}
-            <button type="button" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign up
+            {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMsg("");
+                setMode(mode === "signin" ? "signup" : "signin");
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {mode === "signin" ? "Sign up" : "Sign in"}
             </button>
           </p>
         </div>
 
         <div className="mt-6 text-center">
           <div className="inline-block bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-white text-sm">
-            💡 This is a prototype - enter any email/password to continue
+            💡 Supabase Auth is live — use a real email/password now
           </div>
         </div>
       </div>
@@ -107,26 +213,22 @@ function HomePage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Total Time */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Total Study Time</p>
             <p className="text-2xl font-bold text-gray-900">3h 20m</p>
             <p className="text-xs text-gray-600 mt-1">Across 12 sessions</p>
           </div>
 
-          {/* Today */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Today&apos;s Progress</p>
             <p className="text-2xl font-bold text-gray-900">0m</p>
             <p className="text-xs text-gray-600 mt-1">Daily Goal: 60m (0%)</p>
 
             <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }} />
+              <div className="h-full bg-green-500 rounded-full" style={{ width: "75%" }} />
             </div>
           </div>
 
-          {/* Weekly */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">This Week</p>
             <p className="text-2xl font-bold text-gray-900">5h 10m</p>
@@ -135,35 +237,29 @@ function HomePage() {
               Current Streak: <span className="text-green-700 font-semibold">4 days</span>
             </p>
           </div>
-
         </div>
 
-        {/* Mini Chart */}
         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-gray-500 mb-3">Last 7 Days</p>
 
           <div className="flex items-end gap-2 h-24">
             {[
-              { label: 'Mon', height: '35%' },
-              { label: 'Tue', height: '60%' },
-              { label: 'Wed', height: '80%' },
-              { label: 'Thu', height: '45%' },
-              { label: 'Fri', height: '70%' },
-              { label: 'Sat', height: '50%' },
-              { label: 'Sun', height: '20%' }
+              { label: "Mon", height: "35%" },
+              { label: "Tue", height: "60%" },
+              { label: "Wed", height: "80%" },
+              { label: "Thu", height: "45%" },
+              { label: "Fri", height: "70%" },
+              { label: "Sat", height: "50%" },
+              { label: "Sun", height: "20%" },
             ].map((day) => (
               <div key={day.label} className="flex flex-col items-center flex-1">
-                <div
-                  className="w-4 bg-blue-500 rounded-t-full"
-                  style={{ height: day.height }}
-                />
+                <div className="w-4 bg-blue-500 rounded-t-full" style={{ height: day.height }} />
                 <span className="mt-1 text-[10px] text-gray-600">{day.label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
-
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -206,7 +302,6 @@ function HomePage() {
 
       {/* Recent Activity & Upcoming */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
           <div className="space-y-3">
@@ -234,7 +329,6 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Upcoming Tasks */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Tasks</h2>
           <div className="space-y-3">
@@ -289,10 +383,10 @@ function HomePage() {
 // Materials Page
 function MaterialsPage() {
   const materials = [
-    { name: 'Biology_Notes.pdf', size: '2.4 MB', date: 'Today', type: 'pdf' },
-    { name: 'Chemistry_Ch5.docx', size: '1.8 MB', date: 'Yesterday', type: 'docx' },
-    { name: 'Physics_Formulas.txt', size: '45 KB', date: '2 days ago', type: 'txt' },
-    { name: 'Math_Problems.pdf', size: '3.1 MB', date: '3 days ago', type: 'pdf' }
+    { name: "Biology_Notes.pdf", size: "2.4 MB", date: "Today", type: "pdf" },
+    { name: "Chemistry_Ch5.docx", size: "1.8 MB", date: "Yesterday", type: "docx" },
+    { name: "Physics_Formulas.txt", size: "45 KB", date: "2 days ago", type: "txt" },
+    { name: "Math_Problems.pdf", size: "3.1 MB", date: "3 days ago", type: "pdf" },
   ];
 
   return (
@@ -308,7 +402,6 @@ function MaterialsPage() {
         </button>
       </div>
 
-      {/* Upload Area */}
       <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
         <div className="flex flex-col items-center gap-3">
           <div className="bg-blue-100 rounded-full p-4">
@@ -321,7 +414,6 @@ function MaterialsPage() {
         </div>
       </div>
 
-      {/* Materials List */}
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -346,7 +438,9 @@ function MaterialsPage() {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{material.name}</p>
-                    <p className="text-sm text-gray-500">{material.size} • {material.date}</p>
+                    <p className="text-sm text-gray-500">
+                      {material.size} • {material.date}
+                    </p>
                   </div>
                 </div>
                 <button className="text-blue-600 hover:text-blue-700 flex items-center gap-1">
@@ -382,7 +476,9 @@ function QuizzesPage() {
             <div className="bg-purple-600 rounded-lg p-3">
               <FileQuestion className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">Active</span>
+            <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
+              Active
+            </span>
           </div>
           <h3 className="font-bold text-gray-900 mb-2">Biology Chapter 3 Quiz</h3>
           <p className="text-sm text-gray-600 mb-4">25 questions • Created 2 days ago</p>
@@ -401,7 +497,9 @@ function QuizzesPage() {
             <div className="bg-blue-100 rounded-lg p-3">
               <FileQuestion className="w-6 h-6 text-blue-600" />
             </div>
-            <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">Draft</span>
+            <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+              Draft
+            </span>
           </div>
           <h3 className="font-bold text-gray-900 mb-2">Chemistry Midterm Practice</h3>
           <p className="text-sm text-gray-600 mb-4">40 questions • Created last week</p>
@@ -437,7 +535,6 @@ function PlannerPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">December 2024</h2>
@@ -452,7 +549,6 @@ function PlannerPage() {
           </div>
         </div>
 
-        {/* Today's Tasks */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Today's Tasks</h2>
           <div className="space-y-3">
@@ -499,7 +595,6 @@ function ProgressPage() {
         <p className="text-gray-600">Track your learning journey with AI-powered insights</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
           <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
@@ -526,7 +621,6 @@ function ProgressPage() {
         </div>
       </div>
 
-      {/* Progress Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Weekly Goal</h2>
@@ -537,7 +631,10 @@ function ProgressPage() {
                 <span className="text-sm font-medium text-gray-900">68%</span>
               </div>
               <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style={{ width: '68%' }}></div>
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                  style={{ width: "68%" }}
+                ></div>
               </div>
             </div>
           </div>
@@ -547,7 +644,8 @@ function ProgressPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">AI Feedback</h2>
           <div className="bg-white rounded-lg p-4 border border-purple-200">
             <p className="text-sm text-gray-700 leading-relaxed">
-              Great progress! You're consistently scoring above 80%. Focus more on Chemistry chapters 5-7 to strengthen your weak areas. Keep up the excellent work! 🎉
+              Great progress! You're consistently scoring above 80%. Focus more on Chemistry
+              chapters 5-7 to strengthen your weak areas. Keep up the excellent work! 🎉
             </p>
           </div>
         </div>
@@ -572,7 +670,6 @@ function GroupStudyPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Sessions */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 border-2 border-violet-300 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
@@ -585,7 +682,9 @@ function GroupStudyPage() {
                   <p className="text-sm text-violet-700">5 members active</p>
                 </div>
               </div>
-              <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full animate-pulse">Live</span>
+              <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full animate-pulse">
+                Live
+              </span>
             </div>
             <button className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-lg transition-colors">
               Join Session
@@ -610,7 +709,6 @@ function GroupStudyPage() {
           </div>
         </div>
 
-        {/* Shared Materials */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Shared Materials</h2>
           <div className="space-y-3">
@@ -631,16 +729,33 @@ function GroupStudyPage() {
 
 // Main App Component
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
+  // NEW: use real Supabase session instead of isLoggedIn boolean
+  const [session, setSession] = useState<any>(null);
+
+  const [currentPage, setCurrentPage] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Accessibility state
   const [accessibility, setAccessibility] = useState({
     highContrast: false,
     largeText: false,
     reduceMotion: false,
   });
+
+  useEffect(() => {
+    // get current session on load
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+
+    // listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const rootClasses = [
     "min-h-screen flex",
@@ -650,36 +765,51 @@ export default function App() {
     accessibility.reduceMotion ? "a11y-reduce-motion" : "",
   ].join(" ");
 
-
   const menuItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'materials', label: 'Materials', icon: BookOpen },
-    { id: 'quizzes', label: 'Quizzes', icon: FileQuestion },
-    { id: 'planner', label: 'Planner', icon: Calendar },
-    { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'group', label: 'Group Study', icon: Users },
+    { id: "home", label: "Home", icon: Home },
+    { id: "materials", label: "Materials", icon: BookOpen },
+    { id: "quizzes", label: "Quizzes", icon: FileQuestion },
+    { id: "planner", label: "Planner", icon: Calendar },
+    { id: "progress", label: "Progress", icon: TrendingUp },
+    { id: "group", label: "Group Study", icon: Users },
   ];
 
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+  // If not logged in, show login page
+  if (!session) {
+    return <LoginPage />;
   }
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'home': return <HomePage />;
-      case 'materials': return <MaterialsPage />;
-      case 'quizzes': return <QuizzesPage />;
-      case 'planner': return <PlannerPage />;
-      case 'progress': return <ProgressPage />;
-      case 'group': return <GroupStudyPage />;
-      default: return <HomePage />;
+      case "home":
+        return <HomePage />;
+      case "materials":
+        return <MaterialsPage />;
+      case "quizzes":
+        return <QuizzesPage />;
+      case "planner":
+        return <PlannerPage />;
+      case "progress":
+        return <ProgressPage />;
+      case "group":
+        return <GroupStudyPage />;
+      default:
+        return <HomePage />;
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
     <div className={rootClasses}>
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
+      <aside
+        className={`${
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+      >
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -706,8 +836,8 @@ export default function App() {
                     onClick={() => setCurrentPage(item.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       currentPage === item.id
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -728,8 +858,9 @@ export default function App() {
             <Menu className="w-5 h-5" />
             {sidebarOpen && <span>Collapse</span>}
           </button>
+
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
@@ -743,7 +874,6 @@ export default function App() {
         {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between gap-6">
-            {/* Left side: mobile sidebar toggle + title */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -756,30 +886,21 @@ export default function App() {
               </span>
             </div>
 
-            {/* Center: Accessibility controls */}
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500 mr-1">
-                Accessibility:
-              </span>
-             <button
-                onClick={() => 
-                  setAccessibility((prev) => ({
-                    ...prev,
-                    highContrast: !prev.highContrast,
-                  }))
+              <span className="text-xs font-medium text-gray-500 mr-1">Accessibility:</span>
+              <button
+                onClick={() =>
+                  setAccessibility((prev) => ({ ...prev, highContrast: !prev.highContrast }))
                 }
                 className={`px-4 py-2 rounded-full text-sm ${
-                  accessibility.highContrast ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+                  accessibility.highContrast ? "bg-black text-white" : "bg-gray-100 text-gray-700"
                 }`}
               >
                 High contrast
               </button>
               <button
                 onClick={() =>
-                  setAccessibility((prev) => ({
-                    ...prev,
-                    largeText: !prev.largeText,
-                  }))
+                  setAccessibility((prev) => ({ ...prev, largeText: !prev.largeText }))
                 }
                 className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                   accessibility.largeText
@@ -791,10 +912,7 @@ export default function App() {
               </button>
               <button
                 onClick={() =>
-                  setAccessibility((prev) => ({
-                    ...prev,
-                    reduceMotion: !prev.reduceMotion,
-                  }))
+                  setAccessibility((prev) => ({ ...prev, reduceMotion: !prev.reduceMotion }))
                 }
                 className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                   accessibility.reduceMotion
@@ -806,7 +924,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Right side: notifications + avatar */}
             <div className="flex items-center gap-4">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Bell className="w-6 h-6 text-gray-600" />
@@ -821,11 +938,7 @@ export default function App() {
           </div>
         </header>
 
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          {renderPage()}
-        </main>
+        <main className="flex-1 overflow-auto p-8">{renderPage()}</main>
       </div>
     </div>
   );
