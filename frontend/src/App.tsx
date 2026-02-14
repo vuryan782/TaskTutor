@@ -1396,7 +1396,6 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const [dbStatus, setDbStatus] = useState<string>("");
 
   useEffect(() => {
     if (!session) return;
@@ -1599,4 +1598,5 @@ export default function App() {
     </div>
   );
 }
+
 
