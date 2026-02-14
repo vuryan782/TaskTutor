@@ -1396,6 +1396,20 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const [dbStatus, setDbStatus] = useState<string>("");
+
+  useEffect(() => {
+    if (!session) return;
+
+    (async () => {
+      // Use a table that exists and is safe to query.
+      // This checks connectivity; it does NOT need to return data.
+      const { error } = await supabase.from("users").select("id").limit(1);
+      setDbStatus(error ? `DB error: ${error.message}` : "DB connected");
+    })();
+  }, [session]);
+
+
   const rootClasses = [
     "min-h-screen flex",
     "bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50",
@@ -1585,3 +1599,4 @@ export default function App() {
     </div>
   );
 }
+
