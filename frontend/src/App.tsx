@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   BookOpen,
   Home,
@@ -50,7 +50,9 @@ function LoginPage() {
         if (error) throw error;
 
         // Supabase may require email confirmation depending on project settings
-        setMsg("Account created! If email confirmation is on, check your inbox.");
+        setMsg(
+          "Account created! If email confirmation is on, check your inbox.",
+        );
       }
     } catch (err: any) {
       setMsg(err?.message ?? "Something went wrong");
@@ -165,13 +167,14 @@ function LoginPage() {
               {loading
                 ? "Please wait..."
                 : mode === "signin"
-                ? "Sign In"
-                : "Sign Up"}
+                  ? "Sign In"
+                  : "Sign Up"}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-8">
-            {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+              ? "Don't have an account?"
+              : "Already have an account?"}{" "}
             <button
               type="button"
               onClick={() => {
@@ -195,6 +198,13 @@ function LoginPage() {
   );
 }
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
 // Dashboard/Home Page
 function HomePage() {
   return (
@@ -207,7 +217,10 @@ function HomePage() {
       {/* BASIC STATS SECTION */}
       <section className="space-y-4" aria-labelledby="study-overview-heading">
         <div className="flex items-center justify-between">
-          <h2 id="study-overview-heading" className="text-lg font-semibold text-gray-900">
+          <h2
+            id="study-overview-heading"
+            className="text-lg font-semibold text-gray-900"
+          >
             Study Overview
           </h2>
           <p className="text-xs text-gray-500">Your recent study performance</p>
@@ -227,7 +240,10 @@ function HomePage() {
             <p className="text-xs text-gray-600 mt-1">Daily Goal: 60m (0%)</p>
 
             <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500 rounded-full" style={{ width: "75%" }} />
+              <div
+                className="h-full bg-green-500 rounded-full"
+                style={{ width: "75%" }}
+              />
             </div>
           </div>
 
@@ -236,7 +252,8 @@ function HomePage() {
             <p className="text-2xl font-bold text-gray-900">5h 10m</p>
             <p className="text-xs text-gray-600 mt-1">Weekly Goal: 6h (86%)</p>
             <p className="text-xs text-gray-600 mt-2">
-              Current Streak: <span className="text-green-700 font-semibold">4 days</span>
+              Current Streak:{" "}
+              <span className="text-green-700 font-semibold">4 days</span>
             </p>
           </div>
         </div>
@@ -254,9 +271,17 @@ function HomePage() {
               { label: "Sat", height: "50%" },
               { label: "Sun", height: "20%" },
             ].map((day) => (
-              <div key={day.label} className="flex flex-col items-center flex-1">
-                <div className="w-4 bg-blue-500 rounded-t-full" style={{ height: day.height }} />
-                <span className="mt-1 text-[10px] text-gray-600">{day.label}</span>
+              <div
+                key={day.label}
+                className="flex flex-col items-center flex-1"
+              >
+                <div
+                  className="w-4 bg-blue-500 rounded-t-full"
+                  style={{ height: day.height }}
+                />
+                <span className="mt-1 text-[10px] text-gray-600">
+                  {day.label}
+                </span>
               </div>
             ))}
           </div>
@@ -305,26 +330,34 @@ function HomePage() {
       {/* Recent Activity & Upcoming */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Recent Activity
+          </h2>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Uploaded Biology Notes</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Uploaded Biology Notes
+                </p>
                 <p className="text-xs text-gray-500">2 hours ago</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Completed Chemistry Quiz</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Completed Chemistry Quiz
+                </p>
                 <p className="text-xs text-gray-500">5 hours ago</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Joined Group Study Session</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Joined Group Study Session
+                </p>
                 <p className="text-xs text-gray-500">Yesterday</p>
               </div>
             </div>
@@ -332,26 +365,34 @@ function HomePage() {
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Upcoming Tasks</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Upcoming Tasks
+          </h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <Calendar className="w-5 h-5 text-amber-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Review Biology Ch 3</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Review Biology Ch 3
+                </p>
                 <p className="text-xs text-amber-700">Today at 2:00 PM</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <FileQuestion className="w-5 h-5 text-blue-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Chemistry Practice Quiz</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Chemistry Practice Quiz
+                </p>
                 <p className="text-xs text-blue-700">Today at 4:30 PM</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-lg">
               <Users className="w-5 h-5 text-violet-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Group Study Session</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Group Study Session
+                </p>
                 <p className="text-xs text-violet-700">Today at 6:00 PM</p>
               </div>
             </div>
@@ -386,17 +427,36 @@ function HomePage() {
 function MaterialsPage() {
   const materials = [
     { name: "Biology_Notes.pdf", size: "2.4 MB", date: "Today", type: "pdf" },
-    { name: "Chemistry_Ch5.docx", size: "1.8 MB", date: "Yesterday", type: "docx" },
-    { name: "Physics_Formulas.txt", size: "45 KB", date: "2 days ago", type: "txt" },
-    { name: "Math_Problems.pdf", size: "3.1 MB", date: "3 days ago", type: "pdf" },
+    {
+      name: "Chemistry_Ch5.docx",
+      size: "1.8 MB",
+      date: "Yesterday",
+      type: "docx",
+    },
+    {
+      name: "Physics_Formulas.txt",
+      size: "45 KB",
+      date: "2 days ago",
+      type: "txt",
+    },
+    {
+      name: "Math_Problems.pdf",
+      size: "3.1 MB",
+      date: "3 days ago",
+      type: "pdf",
+    },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Materials</h1>
-          <p className="text-gray-600">Manage and organize your learning resources</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Study Materials
+          </h1>
+          <p className="text-gray-600">
+            Manage and organize your learning resources
+          </p>
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
           <Upload className="w-5 h-5" />
@@ -410,8 +470,12 @@ function MaterialsPage() {
             <Upload className="w-8 h-8 text-blue-600" />
           </div>
           <div>
-            <p className="text-gray-900 font-medium mb-1">Drop files here or click to browse</p>
-            <p className="text-sm text-gray-500">PDF, DOCX, TXT supported (Max 10MB)</p>
+            <p className="text-gray-900 font-medium mb-1">
+              Drop files here or click to browse
+            </p>
+            <p className="text-sm text-gray-500">
+              PDF, DOCX, TXT supported (Max 10MB)
+            </p>
           </div>
         </div>
       </div>
@@ -419,7 +483,9 @@ function MaterialsPage() {
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Your Materials ({materials.length})</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              Your Materials ({materials.length})
+            </h2>
             <div className="relative">
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -464,7 +530,9 @@ function QuizzesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Quizzes</h1>
-          <p className="text-gray-600">Create and manage your practice quizzes</p>
+          <p className="text-gray-600">
+            Create and manage your practice quizzes
+          </p>
         </div>
         <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
           <Plus className="w-5 h-5" />
@@ -482,8 +550,12 @@ function QuizzesPage() {
               Active
             </span>
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">Biology Chapter 3 Quiz</h3>
-          <p className="text-sm text-gray-600 mb-4">25 questions • Created 2 days ago</p>
+          <h3 className="font-bold text-gray-900 mb-2">
+            Biology Chapter 3 Quiz
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            25 questions • Created 2 days ago
+          </p>
           <div className="flex items-center gap-2">
             <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors text-sm">
               Start Quiz
@@ -503,8 +575,12 @@ function QuizzesPage() {
               Draft
             </span>
           </div>
-          <h3 className="font-bold text-gray-900 mb-2">Chemistry Midterm Practice</h3>
-          <p className="text-sm text-gray-600 mb-4">40 questions • Created last week</p>
+          <h3 className="font-bold text-gray-900 mb-2">
+            Chemistry Midterm Practice
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            40 questions • Created last week
+          </p>
           <div className="flex items-center gap-2">
             <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors text-sm">
               Continue Editing
@@ -520,7 +596,9 @@ function QuizzesPage() {
             <Plus className="w-6 h-6 text-purple-600" />
           </div>
           <p className="font-medium text-gray-900 mb-1">Create New Quiz</p>
-          <p className="text-sm text-gray-500">Generate from materials or create manually</p>
+          <p className="text-sm text-gray-500">
+            Generate from materials or create manually
+          </p>
         </div>
       </div>
     </div>
@@ -538,22 +616,37 @@ type Task = {
 };
 
 // Planner Page
-function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatch<React.SetStateAction<Task[]>> }) {
+function PlannerPage({
+  tasks,
+  setTasks,
+}: {
+  tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+}) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const today = new Date();
-  const isCurrentMonth = currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() === today.getMonth();
+  const isCurrentMonth =
+    currentMonth.getFullYear() === today.getFullYear() &&
+    currentMonth.getMonth() === today.getMonth();
   const todayDate = today.getDate();
 
   const parseDate = (dateString: string) => new Date(`${dateString}T00:00:00`);
   const isSameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
-  const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const getDaysInMonth = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const getFirstDayOfMonth = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  const monthName = currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthName = currentMonth.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
   const daysInMonth = getDaysInMonth(currentMonth);
   const firstDay = getFirstDayOfMonth(currentMonth);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -561,7 +654,10 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
 
   const tasksByDay = tasks.reduce<Record<number, number>>((acc, task) => {
     const taskDate = parseDate(task.dueDate);
-    if (taskDate.getFullYear() !== currentMonth.getFullYear() || taskDate.getMonth() !== currentMonth.getMonth()) {
+    if (
+      taskDate.getFullYear() !== currentMonth.getFullYear() ||
+      taskDate.getMonth() !== currentMonth.getMonth()
+    ) {
       return acc;
     }
     const day = taskDate.getDate();
@@ -569,11 +665,17 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
     return acc;
   }, {});
 
-  const tasksForSelectedDate = tasks.filter((task) => isSameDay(parseDate(task.dueDate), selectedDate));
+  const tasksForSelectedDate = tasks.filter((task) =>
+    isSameDay(parseDate(task.dueDate), selectedDate),
+  );
 
   const getDueLabel = (dueDate: string) => {
     const due = parseDate(dueDate);
-    const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const base = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
     const diffMs = due.getTime() - base.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
@@ -599,23 +701,39 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
     const taskId = Number(event.dataTransfer.getData("text/plain"));
     if (!taskId) return;
 
-    const targetDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const targetDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      day,
+    );
     const targetDateString = targetDate.toISOString().split("T")[0];
 
     setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, dueDate: targetDateString } : task))
+      prev.map((task) =>
+        task.id === taskId ? { ...task, dueDate: targetDateString } : task,
+      ),
     );
   };
 
-  const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  const prevMonth = () =>
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1),
+    );
+  const nextMonth = () =>
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1),
+    );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Planner</h1>
-          <p className="text-gray-600">Schedule and organize your study sessions</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Study Planner
+          </h1>
+          <p className="text-gray-600">
+            Schedule and organize your study sessions
+          </p>
         </div>
         <button
           onClick={() => setShowSyncModal(true)}
@@ -630,11 +748,19 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button
+                onClick={prevMonth}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
                 <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
               </button>
-              <h2 className="text-xl font-bold text-gray-900 w-40">{monthName}</h2>
-              <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <h2 className="text-xl font-bold text-gray-900 w-40">
+                {monthName}
+              </h2>
+              <button
+                onClick={nextMonth}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
                 <ChevronRight className="w-5 h-5 text-gray-600" />
               </button>
             </div>
@@ -647,7 +773,10 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
           <div className="bg-white">
             <div className="grid grid-cols-7 gap-2 mb-4">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center font-semibold text-gray-600 text-sm py-2">
+                <div
+                  key={day}
+                  className="text-center font-semibold text-gray-600 text-sm py-2"
+                >
                   {day}
                 </div>
               ))}
@@ -666,8 +795,12 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                   );
                 });
                 const isSelected = isSameDay(
-                  new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day),
-                  selectedDate
+                  new Date(
+                    currentMonth.getFullYear(),
+                    currentMonth.getMonth(),
+                    day,
+                  ),
+                  selectedDate,
                 );
 
                 return (
@@ -676,14 +809,20 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                     onDragOver={handleDragOver}
                     onDrop={(event) => handleDrop(event, day)}
                     onClick={() =>
-                      setSelectedDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))
+                      setSelectedDate(
+                        new Date(
+                          currentMonth.getFullYear(),
+                          currentMonth.getMonth(),
+                          day,
+                        ),
+                      )
                     }
                     className={`aspect-square rounded-lg border-2 p-2 cursor-pointer transition-colors ${
                       isCurrentMonth && day === todayDate
                         ? "border-blue-500 bg-blue-100 text-blue-900 hover:bg-blue-200"
                         : tasksByDay[day]
-                        ? "border-amber-400 bg-amber-50 text-gray-900 hover:bg-amber-100"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700"
+                          ? "border-amber-400 bg-amber-50 text-gray-900 hover:bg-amber-100"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700"
                     } ${isSelected ? "ring-2 ring-blue-400" : ""}`}
                   >
                     <div className="flex items-center justify-between">
@@ -699,7 +838,9 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                         <div
                           key={task.id}
                           draggable
-                          onDragStart={(event) => handleDragStart(event, task.id)}
+                          onDragStart={(event) =>
+                            handleDragStart(event, task.id)
+                          }
                           className="text-[11px] font-medium bg-white/80 border border-white/60 rounded px-1 py-0.5 truncate"
                           title={task.title}
                         >
@@ -707,7 +848,9 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                         </div>
                       ))}
                       {dayTasks.length > 2 && (
-                        <div className="text-[10px] text-gray-600">+{dayTasks.length - 2} more</div>
+                        <div className="text-[10px] text-gray-600">
+                          +{dayTasks.length - 2} more
+                        </div>
                       )}
                     </div>
                   </div>
@@ -720,7 +863,11 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-1">Selected Day</h2>
           <p className="text-sm text-gray-600 mb-4">
-            {selectedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            {selectedDate.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
           </p>
           <div className="space-y-3">
             {tasksForSelectedDate.length > 0 ? (
@@ -736,24 +883,34 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                   <div className="flex items-start gap-2">
                     <span
                       className={`mt-1 h-2 w-2 rounded-full ${
-                        task.status === "completed" ? "bg-green-500" : "bg-amber-500"
+                        task.status === "completed"
+                          ? "bg-green-500"
+                          : "bg-amber-500"
                       }`}
                     ></span>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {task.title}
+                      </p>
                       <p
                         className={`text-xs mt-1 ${
-                          task.status === "completed" ? "text-green-700" : "text-amber-700"
+                          task.status === "completed"
+                            ? "text-green-700"
+                            : "text-amber-700"
                         }`}
                       >
-                        {task.status === "completed" ? "Completed" : getDueLabel(task.dueDate)}
+                        {task.status === "completed"
+                          ? "Completed"
+                          : getDueLabel(task.dueDate)}
                       </p>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-sm text-gray-500">No tasks scheduled for this day.</div>
+              <div className="text-sm text-gray-500">
+                No tasks scheduled for this day.
+              </div>
             )}
           </div>
         </div>
@@ -764,7 +921,9 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Sync Calendars</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Sync Calendars
+                </h2>
                 <button
                   onClick={() => setShowSyncModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -774,16 +933,21 @@ function PlannerPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispa
                 </button>
               </div>
               <p className="text-sm text-gray-600 mb-4">
-                Connect an external calendar to import events into your planner. This is a UI stub for now.
+                Connect an external calendar to import events into your planner.
+                This is a UI stub for now.
               </p>
               <div className="space-y-3">
                 <button className="w-full border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-3 text-left transition-colors">
                   <p className="font-medium text-gray-900">Google Calendar</p>
-                  <p className="text-xs text-gray-500">Connect your Google account to sync events</p>
+                  <p className="text-xs text-gray-500">
+                    Connect your Google account to sync events
+                  </p>
                 </button>
                 <button className="w-full border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-3 text-left transition-colors">
                   <p className="font-medium text-gray-900">iCal</p>
-                  <p className="text-xs text-gray-500">Import an iCal feed URL</p>
+                  <p className="text-xs text-gray-500">
+                    Import an iCal feed URL
+                  </p>
                 </button>
               </div>
               <div className="flex justify-end mt-5">
@@ -808,7 +972,9 @@ function ProgressPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Progress</h1>
-        <p className="text-gray-600">Track your learning journey with AI-powered insights</p>
+        <p className="text-gray-600">
+          Track your learning journey with AI-powered insights
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -860,8 +1026,9 @@ function ProgressPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">AI Feedback</h2>
           <div className="bg-white rounded-lg p-4 border border-purple-200">
             <p className="text-sm text-gray-700 leading-relaxed">
-              Great progress! You're consistently scoring above 80%. Focus more on Chemistry
-              chapters 5-7 to strengthen your weak areas. Keep up the excellent work! 🎉
+              Great progress! You're consistently scoring above 80%. Focus more
+              on Chemistry chapters 5-7 to strengthen your weak areas. Keep up
+              the excellent work! 🎉
             </p>
           </div>
         </div>
@@ -871,27 +1038,44 @@ function ProgressPage() {
 }
 
 // Tasks Page
-function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatch<React.SetStateAction<Task[]>> }) {
-
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "completed">("all");
-  const [filterPriority, setFilterPriority] = useState<"all" | "high" | "medium" | "low">("all");
+function TasksPage({
+  tasks,
+  setTasks,
+}: {
+  tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+}) {
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "pending" | "completed"
+  >("all");
+  const [filterPriority, setFilterPriority] = useState<
+    "all" | "high" | "medium" | "low"
+  >("all");
   const [filterSubject, setFilterSubject] = useState<string>("all");
-  const [filterDueDate, setFilterDueDate] = useState<"all" | "overdue" | "today" | "week" | "month">("all");
+  const [filterDueDate, setFilterDueDate] = useState<
+    "all" | "overdue" | "today" | "week" | "month"
+  >("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ title: "", dueDate: "", priority: "medium", subject: "", course: "" });
+  const [formData, setFormData] = useState({
+    title: "",
+    dueDate: "",
+    priority: "medium",
+    subject: "",
+    course: "",
+  });
 
   const subjects = Array.from(new Set(tasks.map((t) => t.subject)));
 
   const getDueDateMatch = (taskDate: string, filterType: string): boolean => {
     if (filterType === "all") return true;
-    
-    const today = new Date(new Date().toISOString().split('T')[0]);
+
+    const today = new Date(new Date().toISOString().split("T")[0]);
     const taskDateObj = new Date(taskDate);
     const diffTime = taskDateObj.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     switch (filterType) {
       case "overdue":
         return diffDays < 0;
@@ -908,8 +1092,10 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
 
   const filteredTasks = tasks.filter((task) => {
     const statusMatch = filterStatus === "all" || task.status === filterStatus;
-    const priorityMatch = filterPriority === "all" || task.priority === filterPriority;
-    const subjectMatch = filterSubject === "all" || task.subject === filterSubject;
+    const priorityMatch =
+      filterPriority === "all" || task.priority === filterPriority;
+    const subjectMatch =
+      filterSubject === "all" || task.subject === filterSubject;
     const dueDateMatch = getDueDateMatch(task.dueDate, filterDueDate);
     const searchValue = searchTerm.trim().toLowerCase();
     const searchMatch =
@@ -917,31 +1103,46 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
       task.title.toLowerCase().includes(searchValue) ||
       task.subject.toLowerCase().includes(searchValue) ||
       task.course.toLowerCase().includes(searchValue);
-    return statusMatch && priorityMatch && subjectMatch && dueDateMatch && searchMatch;
+    return (
+      statusMatch &&
+      priorityMatch &&
+      subjectMatch &&
+      dueDateMatch &&
+      searchMatch
+    );
   });
 
   const toggleTaskStatus = (id: number) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, status: t.status === "completed" ? "pending" : "completed" } : t)));
+    setTasks(
+      tasks.map((t) =>
+        t.id === id
+          ? { ...t, status: t.status === "completed" ? "pending" : "completed" }
+          : t,
+      ),
+    );
   };
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.dueDate || !formData.subject.trim()) return;
+    if (!formData.title.trim() || !formData.dueDate || !formData.subject.trim())
+      return;
 
     if (editingId !== null) {
       // Update existing task
-      setTasks(tasks.map((t) =>
-        t.id === editingId
-          ? {
-              ...t,
-              title: formData.title,
-              dueDate: formData.dueDate,
-              priority: formData.priority as "high" | "medium" | "low",
-              subject: formData.subject,
-              course: formData.course,
-            }
-          : t
-      ));
+      setTasks(
+        tasks.map((t) =>
+          t.id === editingId
+            ? {
+                ...t,
+                title: formData.title,
+                dueDate: formData.dueDate,
+                priority: formData.priority as "high" | "medium" | "low",
+                subject: formData.subject,
+                course: formData.course,
+              }
+            : t,
+        ),
+      );
       setEditingId(null);
     } else {
       // Create new task
@@ -957,7 +1158,13 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
       setTasks([...tasks, newTask]);
     }
 
-    setFormData({ title: "", dueDate: "", priority: "medium", subject: "", course: "" });
+    setFormData({
+      title: "",
+      dueDate: "",
+      priority: "medium",
+      subject: "",
+      course: "",
+    });
     setShowAddForm(false);
   };
 
@@ -1001,9 +1208,14 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Tasks</h1>
-          <p className="text-gray-600">Organize and track all your study tasks</p>
+          <p className="text-gray-600">
+            Organize and track all your study tasks
+          </p>
         </div>
-        <button onClick={() => setShowAddForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+        >
           <Plus className="w-5 h-5" />
           Add Task
         </button>
@@ -1014,14 +1226,20 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">{editingId !== null ? "Edit Task" : "Add New Task"}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {editingId !== null ? "Edit Task" : "Add New Task"}
+              </h2>
               <form onSubmit={handleAddTask} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Task Title
+                  </label>
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     placeholder="Enter task title..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -1029,22 +1247,30 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Due Date
+                  </label>
                   <input
                     type="date"
                     value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dueDate: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject
+                  </label>
                   <input
                     type="text"
                     value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, subject: e.target.value })
+                    }
                     placeholder="e.g., Biology, Chemistry..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -1054,7 +1280,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
                 <div>
                   <select
                     value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, priority: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">Low</option>
@@ -1064,11 +1292,16 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes <span className="text-gray-400">(Optional)</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Notes{" "}
+                    <span className="text-gray-400">(Optional)</span>
+                  </label>
                   <input
                     type="text"
                     value={formData.course}
-                    onChange={(e) => setFormData({ ...formData, course: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, course: e.target.value })
+                    }
                     placeholder="Add any extra details..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -1086,7 +1319,13 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
                     onClick={() => {
                       setShowAddForm(false);
                       setEditingId(null);
-                      setFormData({ title: "", dueDate: "", priority: "medium", subject: "", course: "" });
+                      setFormData({
+                        title: "",
+                        dueDate: "",
+                        priority: "medium",
+                        subject: "",
+                        course: "",
+                      });
                     }}
                     className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium transition-colors"
                   >
@@ -1117,7 +1356,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Completed</p>
-              <p className="text-3xl font-bold text-green-600">{completedCount}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {completedCount}
+              </p>
             </div>
             <div className="bg-green-100 rounded-full p-3">
               <CheckCircle className="w-6 h-6 text-green-600" />
@@ -1129,7 +1370,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Pending</p>
-              <p className="text-3xl font-bold text-amber-600">{pendingCount}</p>
+              <p className="text-3xl font-bold text-amber-600">
+                {pendingCount}
+              </p>
             </div>
             <div className="bg-amber-100 rounded-full p-3">
               <CheckCircle className="w-6 h-6 text-amber-600" />
@@ -1151,7 +1394,11 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
                   : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {status === "all" ? "All Tasks" : status === "pending" ? "Pending" : "Completed"}
+              {status === "all"
+                ? "All Tasks"
+                : status === "pending"
+                  ? "Pending"
+                  : "Completed"}
             </button>
           ))}
         </div>
@@ -1169,7 +1416,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Priority:</label>
+            <label className="text-sm font-medium text-gray-700">
+              Priority:
+            </label>
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value as any)}
@@ -1183,7 +1432,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Subject:</label>
+            <label className="text-sm font-medium text-gray-700">
+              Subject:
+            </label>
             <select
               value={filterSubject}
               onChange={(e) => setFilterSubject(e.target.value)}
@@ -1199,7 +1450,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Due Date:</label>
+            <label className="text-sm font-medium text-gray-700">
+              Due Date:
+            </label>
             <select
               value={filterDueDate}
               onChange={(e) => setFilterDueDate(e.target.value as any)}
@@ -1233,7 +1486,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
               >
                 <CheckCircle
                   className={`w-6 h-6 transition-colors ${
-                    task.status === "completed" ? "text-green-600 fill-green-600" : "text-gray-400"
+                    task.status === "completed"
+                      ? "text-green-600 fill-green-600"
+                      : "text-gray-400"
                   }`}
                 />
               </button>
@@ -1241,19 +1496,31 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
               <div className="flex-1 min-w-0">
                 <p
                   className={`font-medium transition-all ${
-                    task.status === "completed" ? "line-through text-gray-500" : "text-gray-900"
+                    task.status === "completed"
+                      ? "line-through text-gray-500"
+                      : "text-gray-900"
                   }`}
                 >
                   {task.title}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium text-gray-700">{task.subject}</span>
-                  {task.course && <span className="text-gray-500"> • {task.course}</span>}
-                  {" "} • Due: {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  <span className="font-medium text-gray-700">
+                    {task.subject}
+                  </span>
+                  {task.course && (
+                    <span className="text-gray-500"> • {task.course}</span>
+                  )}{" "}
+                  • Due:{" "}
+                  {new Date(task.dueDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </p>
               </div>
 
-              <div className={`px-3 py-1 rounded-full text-xs border font-medium ${getPriorityColor(task.priority)} flex-shrink-0`}>
+              <div
+                className={`px-3 py-1 rounded-full text-xs border font-medium ${getPriorityColor(task.priority)} flex-shrink-0`}
+              >
                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
               </div>
 
@@ -1277,7 +1544,9 @@ function TasksPage({ tasks, setTasks }: { tasks: Task[]; setTasks: React.Dispatc
           <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
             <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-700 font-medium">No tasks yet</p>
-            <p className="text-sm text-gray-500 mt-1">Create a new task to get started</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Create a new task to get started
+            </p>
           </div>
         )}
       </div>
@@ -1309,7 +1578,9 @@ function GroupStudyPage() {
                   <Users className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Chemistry Study Group</h3>
+                  <h3 className="font-bold text-gray-900">
+                    Chemistry Study Group
+                  </h3>
                   <p className="text-sm text-violet-700">5 members active</p>
                 </div>
               </div>
@@ -1329,7 +1600,9 @@ function GroupStudyPage() {
                   <Users className="w-5 h-5 text-gray-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Biology Review Session</h3>
+                  <h3 className="font-bold text-gray-900">
+                    Biology Review Session
+                  </h3>
                   <p className="text-sm text-gray-600">Scheduled for 6:00 PM</p>
                 </div>
               </div>
@@ -1341,14 +1614,20 @@ function GroupStudyPage() {
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Shared Materials</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Shared Materials
+          </h2>
           <div className="space-y-3">
             <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
-              <p className="text-sm font-medium text-gray-900 mb-1">Biology Notes.pdf</p>
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                Biology Notes.pdf
+              </p>
               <p className="text-xs text-violet-600">Shared by Sarah</p>
             </div>
             <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
-              <p className="text-sm font-medium text-gray-900 mb-1">Math Formulas</p>
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                Math Formulas
+              </p>
               <p className="text-xs text-violet-600">Shared by Mike</p>
             </div>
           </div>
@@ -1358,11 +1637,493 @@ function GroupStudyPage() {
   );
 }
 
+// Reminders Page
+function RemindersPage({ userId }: { userId: string }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  console.log("RemindersPage userId prop:", userId);
+
+  // create form
+  const [title, setTitle] = useState("");
+  const [remindAt, setRemindAt] = useState(""); // datetime-local string
+  const [message, setMessage] = useState("");
+
+  const upcomingCount = useMemo(
+    () => items.filter((r) => !r.is_sent).length,
+    [items],
+  );
+
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  async function enablePush() {
+    setErr(null);
+
+    if (!userId) {
+      setErr("Not logged in (missing user id).");
+      return;
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      setErr("Service workers not supported in this browser.");
+      return;
+    }
+
+    if (!("PushManager" in window)) {
+      setErr("Push notifications not supported in this browser.");
+      return;
+    }
+
+    try {
+      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
+      if (!vapidPublicKey) {
+        setErr("Missing VITE_VAPID_PUBLIC_KEY in .env");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setErr("Push permission was not granted.");
+        return;
+      }
+
+      const reg = await navigator.serviceWorker.register("/sw.js");
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
+
+      const json = sub.toJSON();
+
+      const { data: u } = await supabase.auth.getUser();
+      console.log("session.user.id:", userId);
+      console.log("getUser().id:", u?.user?.id);
+
+      const payload = {
+        user_id: userId,
+        endpoint: sub.endpoint,
+        p256dh: json.keys?.p256dh || "",
+        auth: json.keys?.auth || "",
+      };
+
+      const { data, error } = await supabase
+        .from("push_subscriptions")
+        .upsert(payload, { onConflict: "user_id" })
+        .select("id")
+        .single();
+
+      const { data: check, error: checkErr } = await supabase
+        .from("push_subscriptions")
+        .select("id, endpoint, user_id, created_at")
+        .eq("user_id", userId);
+
+      console.log("db check rows:", check, checkErr);
+
+      console.log("upsert push_subscriptions result:", { data, error });
+
+      if (error) throw error;
+      setPushEnabled(true);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  }
+
+  async function disablePush() {
+    setErr(null);
+
+    if (!userId) {
+      setErr("Not logged in (missing user id).");
+      return;
+    }
+
+    try {
+      // Remove DB subscription (server will stop sending)
+      const { error } = await supabase
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      // Also try to unsubscribe in browser (nice-to-have)
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      await sub?.unsubscribe();
+
+      setPushEnabled(false);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  }
+
+  async function load() {
+    setLoading(true);
+    setErr(null);
+
+    if (!userId) {
+      setErr("Not logged in (missing user id). Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("reminders")
+        .select("*")
+        .eq("user_id", userId)
+        .order("remind_at", { ascending: true });
+
+      if (error) throw error;
+      setItems(data ?? []);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadPushState() {
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("push_subscriptions")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      // we don't want to hard-fail the whole page for this, but only show it if you want
+      console.warn("loadPushState error:", error.message);
+      return;
+    }
+
+    setPushEnabled(!!data);
+  }
+
+  useEffect(() => {
+    if (!userId) return;
+    load();
+    loadPushState();
+  }, [userId]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data, error }) => {
+      console.log("auth.getUser()", {
+        error,
+        id: data.user?.id,
+        email: data.user?.email,
+      });
+    });
+  }, []);
+
+  async function createReminder() {
+    if (!userId) {
+      setErr("Not logged in (missing user id). Please log in again.");
+      return;
+    }
+
+    setErr(null);
+    try {
+      if (!title.trim()) return setErr("Title is required");
+      if (!remindAt) return setErr("Remind time is required");
+
+      const payload = {
+        user_id: userId,
+        title: title.trim(),
+        message: message.trim() || null,
+        remind_at: new Date(remindAt).toISOString(),
+        is_sent: false,
+        sent_at: null,
+      };
+
+      const { data, error } = await supabase
+        .from("reminders")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setItems((prev) =>
+        [...prev, data].sort(
+          (a, b) =>
+            new Date(a.remind_at).getTime() - new Date(b.remind_at).getTime(),
+        ),
+      );
+
+      setTitle("");
+      setRemindAt("");
+      setMessage("");
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  }
+
+  async function markSent(id: string) {
+    if (!userId)
+      return setErr("Not logged in (missing user id). Please log in again.");
+    setErr(null);
+    try {
+      const { data, error } = await supabase
+        .from("reminders")
+        .update({ is_sent: true, sent_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setItems((prev) => prev.map((x) => (x.id === id ? data : x)));
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  }
+
+  async function togglePush(id: string, currentValue: boolean) {
+    if (!userId) return setErr("Not logged in (missing user id).");
+
+    setErr(null);
+    try {
+      const { data, error } = await supabase
+        .from("reminders")
+        .update({ send_push: !currentValue })
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setItems((prev) => prev.map((x) => (x.id === id ? data : x)));
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setOpenMenuId(null);
+    }
+  }
+
+  async function deleteReminder(id: string) {
+    if (!userId)
+      return setErr("Not logged in (missing user id). Please log in again.");
+    setErr(null);
+    try {
+      const { error } = await supabase
+        .from("reminders")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      setItems((prev) => prev.filter((x) => x.id !== id));
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reminders</h1>
+          <p className="text-gray-600">
+            Real reminders stored in your database
+          </p>
+        </div>
+        {/* 
+        <button
+          onClick={load}
+          className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-sm"
+        >
+          Refresh
+        </button> */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={load}
+            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-sm"
+          >
+            Refresh
+          </button>
+
+          <button
+            onClick={pushEnabled ? disablePush : enablePush}
+            className={`px-4 py-2 rounded-lg text-white text-sm ${
+              pushEnabled
+                ? "bg-gray-700 hover:bg-gray-800"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {pushEnabled ? "Disable Push" : "Enable Push"}
+          </button>
+        </div>
+      </div>
+
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4">
+          <p className="font-medium">Error</p>
+          <p className="text-sm mt-1">{err}</p>
+        </div>
+      )}
+
+      {/* Create form */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h2 className="text-lg font-bold text-gray-900">Create Reminder</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="e.g., Study Biology Ch 3"
+            />
+          </div>
+
+          <div className="md:col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Remind At
+            </label>
+            <input
+              type="datetime-local"
+              value={remindAt}
+              onChange={(e) => setRemindAt(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="md:col-span-1 flex items-end">
+            <button
+              onClick={createReminder}
+              className="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg"
+            >
+              Create
+            </button>
+          </div>
+
+          <div className="md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Message (optional)
+            </label>
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="Extra note…"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900">Your Reminders</h2>
+          <span className="text-sm text-gray-500">
+            {upcomingCount} upcoming
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="p-6 text-gray-600">Loading…</div>
+        ) : items.length === 0 ? (
+          <div className="p-6 text-gray-600">No reminders yet.</div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {items.map((r) => (
+              <div
+                key={r.id}
+                className="p-6 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-gray-900">{r.title}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Remind at: {new Date(r.remind_at).toLocaleString()}
+                    </p>
+
+                    <span
+                      className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
+                        r.is_sent
+                          ? "bg-gray-200 text-gray-700"
+                          : "bg-rose-200 text-rose-800"
+                      }`}
+                    >
+                      {r.is_sent ? "Sent" : "Scheduled"}
+                    </span>
+                  </div>
+
+                  <div className="relative flex items-center gap-2">
+                    {/* 3-dot button */}
+                    <button
+                      onClick={() =>
+                        setOpenMenuId((prev) => (prev === r.id ? null : r.id))
+                      }
+                      className="h-9 w-9 grid place-items-center rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700"
+                      aria-label="More options"
+                    >
+                      ⋯
+                    </button>
+
+                    {/* Dropdown */}
+                    {openMenuId === r.id && (
+                      <div className="absolute right-0 top-11 z-20 w-52 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+                        <button
+                          onClick={() => togglePush(r.id, !!r.send_push)}
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center justify-between"
+                        >
+                          <span>Push</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              r.send_push
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {r.send_push ? "On" : "Off"}
+                          </span>
+                        </button>
+
+                        {!r.is_sent && (
+                          <button
+                            onClick={() => markSent(r.id)}
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50"
+                          >
+                            Mark sent
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => deleteReminder(r.id)}
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-red-50 text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {r.message && (
+                  <p className="text-sm text-gray-500 mt-3">{r.message}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Main App Component
 export default function App() {
   // NEW: use real Supabase session instead of isLoggedIn boolean
   const [session, setSession] = useState<any>(null);
-
+  const userID = session?.user?.id;
   const [currentPage, setCurrentPage] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -1373,11 +2134,51 @@ export default function App() {
   });
 
   const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, title: "Review Biology Ch 3", dueDate: "2026-02-13", status: "completed", priority: "high", subject: "Biology", course: "Biology 101" },
-    { id: 2, title: "Chemistry Quiz Practice", dueDate: "2026-02-13", status: "pending", priority: "high", subject: "Chemistry", course: "Chem 201" },
-    { id: 3, title: "Math Problem Set 5", dueDate: "2026-02-14", status: "pending", priority: "medium", subject: "Math", course: "Calculus II" },
-    { id: 4, title: "Read Physics Chapter 6", dueDate: "2026-02-15", status: "pending", priority: "low", subject: "Physics", course: "" },
-    { id: 5, title: "Group Study Session", dueDate: "2026-02-13", status: "pending", priority: "medium", subject: "Biology", course: "Biology 101" },
+    {
+      id: 1,
+      title: "Review Biology Ch 3",
+      dueDate: "2026-02-13",
+      status: "completed",
+      priority: "high",
+      subject: "Biology",
+      course: "Biology 101",
+    },
+    {
+      id: 2,
+      title: "Chemistry Quiz Practice",
+      dueDate: "2026-02-13",
+      status: "pending",
+      priority: "high",
+      subject: "Chemistry",
+      course: "Chem 201",
+    },
+    {
+      id: 3,
+      title: "Math Problem Set 5",
+      dueDate: "2026-02-14",
+      status: "pending",
+      priority: "medium",
+      subject: "Math",
+      course: "Calculus II",
+    },
+    {
+      id: 4,
+      title: "Read Physics Chapter 6",
+      dueDate: "2026-02-15",
+      status: "pending",
+      priority: "low",
+      subject: "Physics",
+      course: "",
+    },
+    {
+      id: 5,
+      title: "Group Study Session",
+      dueDate: "2026-02-13",
+      status: "pending",
+      priority: "medium",
+      subject: "Biology",
+      course: "Biology 101",
+    },
   ]);
 
   useEffect(() => {
@@ -1412,6 +2213,7 @@ export default function App() {
     { id: "planner", label: "Planner", icon: Calendar },
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "group", label: "Group Study", icon: Users },
+    { id: "reminders", label: "Reminders", icon: Bell },
   ];
 
   // If not logged in, show login page
@@ -1435,6 +2237,8 @@ export default function App() {
         return <ProgressPage />;
       case "group":
         return <GroupStudyPage />;
+      case "reminders":
+        return <RemindersPage userId={session.user.id} />;
       default:
         return <HomePage />;
     }
@@ -1483,7 +2287,9 @@ export default function App() {
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                    {sidebarOpen && (
+                      <span className="font-medium">{item.label}</span>
+                    )}
                   </button>
                 </li>
               );
@@ -1529,20 +2335,30 @@ export default function App() {
             </div>
 
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500 mr-1">Accessibility:</span>
+              <span className="text-xs font-medium text-gray-500 mr-1">
+                Accessibility:
+              </span>
               <button
                 onClick={() =>
-                  setAccessibility((prev) => ({ ...prev, highContrast: !prev.highContrast }))
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    highContrast: !prev.highContrast,
+                  }))
                 }
                 className={`px-4 py-2 rounded-full text-sm ${
-                  accessibility.highContrast ? "bg-black text-white" : "bg-gray-100 text-gray-700"
+                  accessibility.highContrast
+                    ? "bg-black text-white"
+                    : "bg-gray-100 text-gray-700"
                 }`}
               >
                 High contrast
               </button>
               <button
                 onClick={() =>
-                  setAccessibility((prev) => ({ ...prev, largeText: !prev.largeText }))
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    largeText: !prev.largeText,
+                  }))
                 }
                 className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                   accessibility.largeText
@@ -1554,7 +2370,10 @@ export default function App() {
               </button>
               <button
                 onClick={() =>
-                  setAccessibility((prev) => ({ ...prev, reduceMotion: !prev.reduceMotion }))
+                  setAccessibility((prev) => ({
+                    ...prev,
+                    reduceMotion: !prev.reduceMotion,
+                  }))
                 }
                 className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                   accessibility.reduceMotion
@@ -1585,6 +2404,3 @@ export default function App() {
     </div>
   );
 }
-
-
-

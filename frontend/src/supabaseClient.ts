@@ -1,5 +1,3 @@
-
-
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -11,3 +9,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// TEMP DEBUG — remove later
+// @ts-ignore
+window.supabase = supabase;
