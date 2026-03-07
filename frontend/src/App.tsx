@@ -173,6 +173,7 @@ function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-8">
+            {mode === "signin"
               ? "Don't have an account?"
               : "Already have an account?"}{" "}
             <button
