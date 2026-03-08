@@ -1,42 +1,102 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ── Dark Mode ──────────────────────────────────────────────── */
+
+.a11y-high-contrast {
+  background: #0f1117 !important;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.a11y-high-contrast .bg-gradient-to-br,
+.a11y-high-contrast [class*="from-slate-50"],
+.a11y-high-contrast [class*="via-blue-50"],
+.a11y-high-contrast [class*="to-indigo-50"] {
+  background: #0f1117 !important;
+  --tw-gradient-from: #0f1117 !important;
+  --tw-gradient-via: #0f1117 !important;
+  --tw-gradient-to: #0f1117 !important;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.a11y-high-contrast .bg-white {
+  background-color: #1a1d2e !important;
+}
+
+.a11y-high-contrast .bg-gray-50 {
+  background-color: #12141f !important;
+}
+.a11y-high-contrast .bg-gray-100 {
+  background-color: #1e2130 !important;
+}
+.a11y-high-contrast .bg-gray-200 {
+  background-color: #252838 !important;
+}
+
+.a11y-high-contrast .border-gray-200 {
+  border-color: #2e3148 !important;
+}
+.a11y-high-contrast .border-gray-300 {
+  border-color: #373b55 !important;
+}
+.a11y-high-contrast .border-b,
+.a11y-high-contrast .border-r,
+.a11y-high-contrast .border-t {
+  border-color: #2e3148 !important;
+}
+
+.a11y-high-contrast .text-gray-900 { color: #f1f3f9 !important; }
+.a11y-high-contrast .text-gray-800 { color: #e2e6f0 !important; }
+.a11y-high-contrast .text-gray-700 { color: #c8cfe0 !important; }
+.a11y-high-contrast .text-gray-600 { color: #9ba3bf !important; }
+.a11y-high-contrast .text-gray-500 { color: #6b7494 !important; }
+.a11y-high-contrast .text-gray-400 { color: #4e5470 !important; }
+
+.a11y-high-contrast input,
+.a11y-high-contrast textarea,
+.a11y-high-contrast select {
+  background-color: #12141f !important;
+  border-color: #373b55 !important;
+  color: #f1f3f9 !important;
+}
+.a11y-high-contrast input::placeholder,
+.a11y-high-contrast textarea::placeholder {
+  color: #4e5470 !important;
+}
+
+.a11y-high-contrast .hover\:bg-gray-100:hover { background-color: #1e2130 !important; }
+.a11y-high-contrast .hover\:bg-gray-50:hover  { background-color: #171928 !important; }
+.a11y-high-contrast .hover\:bg-gray-200:hover { background-color: #252838 !important; }
+.a11y-high-contrast .hover\:bg-gray-300:hover { background-color: #2e3148 !important; }
+
+.a11y-high-contrast .bg-blue-100   { background-color: #1e3a5f !important; }
+.a11y-high-contrast .bg-green-100  { background-color: #14432a !important; }
+.a11y-high-contrast .bg-amber-100  { background-color: #422006 !important; }
+.a11y-high-contrast .bg-red-100    { background-color: #3b1219 !important; }
+.a11y-high-contrast .bg-green-50   { background-color: #0d2e1c !important; }
+.a11y-high-contrast .bg-amber-50   { background-color: #2d1a04 !important; }
+.a11y-high-contrast .bg-red-50     { background-color: #2a0d12 !important; }
+.a11y-high-contrast .bg-blue-50    { background-color: #0d1e3b !important; }
+.a11y-high-contrast .bg-violet-50  { background-color: #1a0d35 !important; }
+.a11y-high-contrast .bg-emerald-50 { background-color: #052e16 !important; }
+
+.a11y-high-contrast .border-dashed { border-color: #2e3148 !important; }
+
+/* ── Large Text — handled via JS (document.documentElement.fontSize) ── */
+/* Nothing needed here — scaling the <html> font-size makes all rem   */
+/* units (Tailwind text-sm, text-xl etc.) grow automatically.          */
+
+/* ── Reduce Motion — triggered via data-reduce-motion on <html> ──── */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Also respect the OS-level preference automatically */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
