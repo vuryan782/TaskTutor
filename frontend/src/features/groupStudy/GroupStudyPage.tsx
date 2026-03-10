@@ -1,5 +1,5 @@
 import { Copy, ExternalLink, FileText, Link2, Lock, Plus, Trash2, Upload, Users, Video } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "../../supabaseClient";
 import type { GroupSession } from "../../types/study";
@@ -46,6 +46,19 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
   const [openingMaterialId, setOpeningMaterialId] = useState<string | null>(null);
   const [removingMaterialId, setRemovingMaterialId] = useState<string | null>(null);
 
+  const syncChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const materialsRef = useRef<Record<string, SharedMaterial[]>>({});
+
+  const [activeViewerMaterial, setActiveViewerMaterial] = useState<{
+    id: string;
+    sessionId: string;
+    title: string;
+    url: string;
+    materialType: "link" | "file";
+    mimeType: string | null;
+    openedBy: string;
+  } | null>(null);
+  
   const [newSession, setNewSession] = useState({
     title: "",
     subject: "",
@@ -226,39 +239,121 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     }
   };
 
+  const resolveMaterialUrl = async (material: SharedMaterial) => {
+    if (material.materialType === "link") {
+      return material.url;
+    }
+
+    if (!material.storagePath) {
+      throw new Error("This file is missing a storage path.");
+    }
+
+    const { data, error } = await supabase
+      .storage
+      .from(MATERIALS_BUCKET)
+      .createSignedUrl(material.storagePath, 60 * 60);
+
+    if (error || !data?.signedUrl) {
+      throw new Error(error?.message || "Could not create signed URL.");
+    }
+
+    return data.signedUrl;
+  };
+
+  const openMaterialInViewer = async (
+    material: SharedMaterial,
+    openedBy: string
+  ) => {
+    const resolvedUrl = await resolveMaterialUrl(material);
+
+    setActiveViewerMaterial({
+      id: material.id,
+      sessionId: material.sessionId,
+      title: material.title,
+      url: resolvedUrl,
+      materialType: material.materialType,
+      mimeType: material.mimeType,
+      openedBy,
+    });
+  };
+  
+  useEffect(() => {
+    materialsRef.current = materialsBySession;
+    }, [materialsBySession]);
+  
   useEffect(() => {
     setLoading(true);
     Promise.all([loadSessions(), loadMaterials()]).finally(() => setLoading(false));
+useEffect(() => {
+  setLoading(true);
+  Promise.all([loadSessions(), loadMaterials()]).finally(() => setLoading(false));
 
-    const channel = supabase
-      .channel(`group-study-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "group_sessions" },
-        () => {
-          loadSessions();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "group_session_members" },
-        () => {
-          loadSessions();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "group_session_materials" },
-        () => {
-          loadMaterials();
-        }
-      )
-      .subscribe();
+  const channel = supabase
+    .channel("group-study-sync", {
+      config: { broadcast: { self: false } },
+    })
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "group_sessions" },
+      () => {
+        loadSessions();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "group_session_members" },
+      () => {
+        loadSessions();
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "group_session_materials" },
+      () => {
+        loadMaterials();
+      }
+    )
+    .on("broadcast", { event: "material-opened" }, async ({ payload }) => {
+      const sessionId = payload?.sessionId as string | undefined;
+      const materialId = payload?.materialId as string | undefined;
+      const openedBy = (payload?.openedBy as string | undefined) ?? "A participant";
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+      if (!sessionId || !materialId) return;
+
+      const material = (materialsRef.current[sessionId] ?? []).find(
+        (item) => item.id === materialId
+      );
+
+      if (!material) {
+        await loadMaterials();
+        const refreshedMaterial = (materialsRef.current[sessionId] ?? []).find(
+          (item) => item.id === materialId
+        );
+        if (!refreshedMaterial) return;
+
+        try {
+          await openMaterialInViewer(refreshedMaterial, openedBy);
+        } catch (err) {
+          setErrorMsg(toReadableError(err, "Could not open shared material."));
+        }
+        return;
+      }
+
+      try {
+        await openMaterialInViewer(material, openedBy);
+      } catch (err) {
+        setErrorMsg(toReadableError(err, "Could not open shared material."));
+      }
+    })
+    .subscribe();
+
+  syncChannelRef.current = channel;
+
+  return () => {
+    supabase.removeChannel(channel);
+    syncChannelRef.current = null;
+  };
+}, [userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -546,37 +641,29 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     }
   };
 
-  const handleOpenMaterial = async (material: SharedMaterial) => {
-    if (material.materialType === "link") {
-      window.open(material.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    if (!material.storagePath) {
-      setErrorMsg("This file is missing a storage path.");
-      return;
-    }
-
+   const handleOpenMaterial = async (material: SharedMaterial) => {
     setOpeningMaterialId(material.id);
+    setErrorMsg("");
+
     try {
-      const { data, error } = await supabase
-        .storage
-        .from(MATERIALS_BUCKET)
-        .createSignedUrl(material.storagePath, 60 * 60);
+      await openMaterialInViewer(material, userLabel);
 
-      if (error || !data?.signedUrl) {
-        setErrorMsg(error?.message || "Could not open file.");
-        return;
-      }
-
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      await syncChannelRef.current?.send({
+        type: "broadcast",
+        event: "material-opened",
+        payload: {
+          sessionId: material.sessionId,
+          materialId: material.id,
+          openedBy: userLabel,
+        },
+      });
     } catch (err) {
-      setErrorMsg(toReadableError(err, "Could not open file."));
+      setErrorMsg(toReadableError(err, "Could not open shared material."));
     } finally {
       setOpeningMaterialId(null);
     }
   };
-
+  
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     const sessionId = selectedMaterialsSessionId;
@@ -1071,6 +1158,53 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
               </div>
             )}
           </div>
+          
+          {activeViewerMaterial && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Shared Viewer: {activeViewerMaterial.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Opened by {activeViewerMaterial.openedBy}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <a
+                    href={activeViewerMaterial.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Open in new tab
+                  </a>
+                  <button
+                    onClick={() => setActiveViewerMaterial(null)}
+                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              
+              {activeViewerMaterial.materialType === "file" &&
+              activeViewerMaterial.mimeType?.startsWith("image/") ? (
+                <img
+                  src={activeViewerMaterial.url}
+                  alt={activeViewerMaterial.title}
+                  className="max-h-[600px] w-full object-contain rounded-lg border border-gray-200"
+                />
+              ) : (
+                <iframe
+                  src={activeViewerMaterial.url}
+                  title={activeViewerMaterial.title}
+                  className="w-full h-[600px] rounded-lg border border-gray-200"
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
