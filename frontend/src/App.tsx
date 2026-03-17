@@ -16,13 +16,12 @@ import {
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
+import NoteCamera from "./NoteCamera";
 
 // Login Page Component
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // NEW: mode (sign in vs sign up) + loading + message
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
@@ -46,8 +45,6 @@ function LoginPage() {
           password,
         });
         if (error) throw error;
-
-        // Supabase may require email confirmation depending on project settings
         setMsg("Account created! If email confirmation is on, check your inbox.");
       }
     } catch (err: any) {
@@ -62,10 +59,11 @@ function LoginPage() {
       setMsg("Enter your email first, then click Forgot password.");
       return;
     }
+
     setMsg("");
     setLoading(true);
+
     try {
-      // For local dev, redirect back to your app
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: "http://localhost:5173",
       });
@@ -99,7 +97,6 @@ function LoginPage() {
               : "Sign up to start your learning journey"}
           </p>
 
-          {/* NEW: message area */}
           {msg ? (
             <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
               {msg}
@@ -202,7 +199,6 @@ function HomePage() {
         <p>Here's your study overview for today</p>
       </div>
 
-      {/* BASIC STATS SECTION */}
       <section className="space-y-4" aria-labelledby="study-overview-heading">
         <div className="flex items-center justify-between">
           <h2 id="study-overview-heading" className="text-lg font-semibold text-gray-900">
@@ -211,7 +207,6 @@ function HomePage() {
           <p className="text-xs text-gray-500">Your recent study performance</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Total Study Time</p>
@@ -261,7 +256,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
@@ -300,7 +294,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Recent Activity & Upcoming */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
@@ -357,7 +350,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
         <h2 className="text-xl font-bold mb-2">Quick Actions</h2>
         <p className="text-blue-100 mb-4">Get started with common tasks</p>
@@ -389,6 +381,10 @@ function MaterialsPage() {
     { name: "Math_Problems.pdf", size: "3.1 MB", date: "3 days ago", type: "pdf" },
   ];
 
+  const handleCapture = async (imageDataUrl: string) => {
+    console.log("Captured image:", imageDataUrl);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -396,6 +392,7 @@ function MaterialsPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Materials</h1>
           <p className="text-gray-600">Manage and organize your learning resources</p>
         </div>
+
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors">
           <Upload className="w-5 h-5" />
           Upload Files
@@ -414,6 +411,11 @@ function MaterialsPage() {
         </div>
       </div>
 
+      <div className="rounded-xl border-2 border-red-500 p-4">
+        <p className="font-bold text-red-600 mb-3">CAMERA TEST AREA</p>
+        <NoteCamera onCapture={handleCapture} />
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -428,6 +430,7 @@ function MaterialsPage() {
             </div>
           </div>
         </div>
+
         <div className="divide-y divide-gray-200">
           {materials.map((material, index) => (
             <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
@@ -443,6 +446,7 @@ function MaterialsPage() {
                     </p>
                   </div>
                 </div>
+
                 <button className="text-blue-600 hover:text-blue-700 flex items-center gap-1">
                   View <ChevronRight className="w-4 h-4" />
                 </button>
@@ -729,9 +733,7 @@ function GroupStudyPage() {
 
 // Main App Component
 export default function App() {
-  // NEW: use real Supabase session instead of isLoggedIn boolean
   const [session, setSession] = useState<any>(null);
-
   const [currentPage, setCurrentPage] = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -742,12 +744,10 @@ export default function App() {
   });
 
   useEffect(() => {
-    // get current session on load
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
 
-    // listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -774,7 +774,6 @@ export default function App() {
     { id: "group", label: "Group Study", icon: Users },
   ];
 
-  // If not logged in, show login page
   if (!session) {
     return <LoginPage />;
   }
@@ -804,13 +803,11 @@ export default function App() {
 
   return (
     <div className={rootClasses}>
-      {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
         } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
       >
-        {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-2">
@@ -825,7 +822,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => {
@@ -849,7 +845,6 @@ export default function App() {
           </ul>
         </nav>
 
-        {/* Footer */}
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -869,9 +864,7 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-4">
