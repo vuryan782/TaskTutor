@@ -10,6 +10,7 @@ import {
   LogOut,
   Bell,
   CheckCircle,
+  Mic,
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -23,6 +24,7 @@ import PlannerPage from "./features/planner/PlannerPage";
 import ProgressPage from "./features/progress/ProgressPage";
 import GroupStudyPage from "./features/groupStudy/GroupStudyPage";
 import RevisionPlannerPage from "./RevisionPlannerPage";
+import NotesPage from "./features/notes/NotesPage";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -74,6 +76,7 @@ export default function App() {
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "group", label: "Group Study", icon: Users },
     { id: "study-plan", label: "Study Plan Generator", icon: BookOpen },
+    { id: "notes", label: "Voice Notes", icon: Mic },
   ];
 
   if (!session) {
@@ -98,6 +101,8 @@ export default function App() {
         return <GroupStudyPage userId={session.user.id} userLabel={session.user.email ?? "Student"} />;
       case "study-plan":
         return <RevisionPlannerPage />;
+      case "notes":
+        return <NotesPage />;
       default:
         return <HomePage />;
     }
