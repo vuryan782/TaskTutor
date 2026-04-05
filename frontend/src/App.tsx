@@ -17,6 +17,7 @@ import {
 
 import { supabase } from "./supabaseClient";
 import NoteCamera from "./NoteCamera";
+import RevisionPlannerPage from "./RevisionPlannerPage";
 
 // Login Page Component
 function LoginPage() {
@@ -772,6 +773,7 @@ export default function App() {
     { id: "planner", label: "Planner", icon: Calendar },
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "group", label: "Group Study", icon: Users },
+    { id: "study-plan", label: "Study Plan Generator", icon: BookOpen },
   ];
 
   if (!session) {
@@ -792,6 +794,8 @@ export default function App() {
         return <ProgressPage />;
       case "group":
         return <GroupStudyPage />;
+      case "study-plan":
+        return <RevisionPlannerPage />;
       default:
         return <HomePage />;
     }
