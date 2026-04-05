@@ -22,6 +22,7 @@ import TasksPage from "./features/tasks/TasksPage";
 import PlannerPage from "./features/planner/PlannerPage";
 import ProgressPage from "./features/progress/ProgressPage";
 import GroupStudyPage from "./features/groupStudy/GroupStudyPage";
+import RevisionPlannerPage from "./RevisionPlannerPage";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -72,6 +73,7 @@ export default function App() {
     { id: "planner", label: "Planner", icon: Calendar },
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "group", label: "Group Study", icon: Users },
+    { id: "study-plan", label: "Study Plan Generator", icon: BookOpen },
   ];
 
   if (!session) {
@@ -94,6 +96,8 @@ export default function App() {
         return <ProgressPage />;
       case "group":
         return <GroupStudyPage userId={session.user.id} userLabel={session.user.email ?? "Student"} />;
+      case "study-plan":
+  return <RevisionPlannerPage />;
       default:
         return <HomePage />;
     }
