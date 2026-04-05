@@ -97,7 +97,7 @@ export default function App() {
       case "group":
         return <GroupStudyPage userId={session.user.id} userLabel={session.user.email ?? "Student"} />;
       case "study-plan":
-  return <RevisionPlannerPage />;
+        return <RevisionPlannerPage />;
       default:
         return <HomePage />;
     }
