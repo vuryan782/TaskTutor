@@ -14,6 +14,7 @@ import {
   Moon,
   Type,
   Pause,
+  Mic,
 } from "lucide-react";
 import "./App.css";
 
@@ -28,6 +29,8 @@ import PlannerPage from "./features/planner/PlannerPage";
 import ProgressPage from "./features/progress/ProgressPage";
 import GroupStudyPage from "./features/groupStudy/GroupStudyPage";
 import RemindersPage from "./features/reminders/RemindersPage";
+import RevisionPlannerPage from "./RevisionPlannerPage";
+import NotesPage from "./features/notes/NotesPage";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -56,7 +59,9 @@ export default function App() {
 
   // Large text — scale the HTML root so all rem-based Tailwind text scales correctly
   useEffect(() => {
-    document.documentElement.style.fontSize = accessibility.largeText ? "120%" : "";
+    document.documentElement.style.fontSize = accessibility.largeText
+      ? "120%"
+      : "";
   }, [accessibility.largeText]);
 
   // Reduce motion — honour the OS preference OR the user toggle
@@ -147,6 +152,8 @@ export default function App() {
     { id: "progress", label: "Progress", icon: TrendingUp },
     { id: "group", label: "Group Study", icon: Users },
     { id: "reminders", label: "Reminders", icon: Bell },
+    { id: "study-plan", label: "Study Plan Generator", icon: BookOpen },
+    { id: "notes", label: "Voice Notes", icon: Mic },
   ];
 
   if (!session) {
@@ -168,9 +175,18 @@ export default function App() {
       case "progress":
         return <ProgressPage />;
       case "group":
-        return <GroupStudyPage />;
+        return (
+          <GroupStudyPage
+            userId={session.user.id}
+            userLabel={session.user.email ?? "Student"}
+          />
+        );
       case "reminders":
         return <RemindersPage />;
+      case "study-plan":
+        return <RevisionPlannerPage />;
+      case "notes":
+        return <NotesPage />;
       default:
         return <HomePage />;
     }
@@ -303,21 +319,32 @@ export default function App() {
                     <button
                       key={key}
                       onClick={() =>
-                        setAccessibility((prev) => ({ ...prev, [key]: !prev[key] }))
+                        setAccessibility((prev) => ({
+                          ...prev,
+                          [key]: !prev[key],
+                        }))
                       }
                       className="w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-1.5 rounded-md ${accessibility[key] ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"}`}>
+                        <div
+                          className={`p-1.5 rounded-md ${accessibility[key] ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"}`}
+                        >
                           {icon}
                         </div>
                         <div className="text-left">
-                          <p className="text-sm font-medium text-gray-900">{label}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {label}
+                          </p>
                           <p className="text-xs text-gray-500">{description}</p>
                         </div>
                       </div>
-                      <div className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${accessibility[key] ? "bg-blue-600" : "bg-gray-300"}`}>
-                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${accessibility[key] ? "translate-x-5" : "translate-x-0.5"}`} />
+                      <div
+                        className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${accessibility[key] ? "bg-blue-600" : "bg-gray-300"}`}
+                      >
+                        <div
+                          className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${accessibility[key] ? "translate-x-5" : "translate-x-0.5"}`}
+                        />
                       </div>
                     </button>
                   ))}
