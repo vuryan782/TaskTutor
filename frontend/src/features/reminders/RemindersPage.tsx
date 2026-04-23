@@ -156,12 +156,12 @@ export default function RemindersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reminders</h1>
-          <p className="text-gray-600">Stay on top of your study schedule</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Reminders</h1>
+          <p className="text-[#8b8b9e]">Stay on top of your study schedule</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
           New Reminder
@@ -172,29 +172,29 @@ export default function RemindersPage() {
       {"Notification" in window && (
         <div className={`rounded-xl border ${
           notifPermission === "granted"
-            ? "bg-green-50 border-green-200"
+            ? "bg-[#4ade80]/10 border-[#4ade80]/20"
             : notifPermission === "denied"
-            ? "bg-red-50 border-red-200"
-            : "bg-blue-50 border-blue-200"
+            ? "bg-[#ef4444]/10 border-[#ef4444]/20"
+            : "bg-[#60a5fa]/10 border-[#60a5fa]/20"
         }`}>
           <div className="flex items-center justify-between gap-4 p-5">
             <div className="flex items-center gap-3">
               <div className={`rounded-full p-2.5 flex-shrink-0 ${
-                notifPermission === "granted" ? "bg-green-100"
-                : notifPermission === "denied" ? "bg-red-100"
-                : "bg-blue-100"
+                notifPermission === "granted" ? "bg-[#4ade80]/20"
+                : notifPermission === "denied" ? "bg-[#ef4444]/20"
+                : "bg-[#60a5fa]/20"
               }`}>
                 {notifPermission === "granted" ? (
-                  <Bell className="w-5 h-5 text-green-600" />
+                  <Bell className="w-5 h-5 text-[#4ade80]" />
                 ) : (
-                  <BellOff className="w-5 h-5 text-red-500" />
+                  <BellOff className="w-5 h-5 text-[#ef4444]" />
                 )}
               </div>
               <div>
                 <p className={`font-semibold text-sm ${
-                  notifPermission === "granted" ? "text-green-900"
-                  : notifPermission === "denied" ? "text-red-900"
-                  : "text-blue-900"
+                  notifPermission === "granted" ? "text-[#4ade80]"
+                  : notifPermission === "denied" ? "text-[#ef4444]"
+                  : "text-[#60a5fa]"
                 }`}>
                   {notifPermission === "granted"
                     ? nextPending
@@ -207,9 +207,9 @@ export default function RemindersPage() {
                     : "Push notifications are off"}
                 </p>
                 <p className={`text-xs mt-0.5 ${
-                  notifPermission === "granted" ? "text-green-700"
-                  : notifPermission === "denied" ? "text-red-700"
-                  : "text-blue-700"
+                  notifPermission === "granted" ? "text-[#4ade80]/70"
+                  : notifPermission === "denied" ? "text-[#ef4444]/70"
+                  : "text-[#60a5fa]/70"
                 }`}>
                   {notifPermission === "granted"
                     ? "You'll be alerted even when the tab is closed"
@@ -236,7 +236,7 @@ export default function RemindersPage() {
                 aria-label="Toggle push notifications"
               >
                 <div className={`w-12 h-6 rounded-full transition-colors relative ${
-                  pushEnabled ? "bg-green-500" : "bg-gray-300"
+                  pushEnabled ? "bg-[#4ade80]" : "bg-[#5c5c72]"
                 }`}>
                   <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
                     pushEnabled ? "translate-x-6" : "translate-x-0.5"
@@ -248,9 +248,9 @@ export default function RemindersPage() {
 
           {/* Blocked instructions */}
           {notifPermission === "denied" && (
-            <div className="border-t border-red-200 px-5 py-4 space-y-3">
-              <p className="text-sm font-semibold text-red-900">How to unblock notifications:</p>
-              <ol className="space-y-2 text-sm text-red-800">
+            <div className="border-t border-[#ef4444]/20 px-5 py-4 space-y-3">
+              <p className="text-sm font-semibold text-[#ef4444]">How to unblock notifications:</p>
+              <ol className="space-y-2 text-sm text-[#ef4444]/80">
                 <li className="flex gap-2">
                   <span className="font-bold flex-shrink-0">1.</span>
                   <span>Click the <strong>lock icon</strong> or <strong>info icon</strong> in your browser's address bar (left of the URL).</span>
@@ -264,7 +264,7 @@ export default function RemindersPage() {
                   <span><strong>Reload this page</strong> — the toggle will appear and you can turn on reminders.</span>
                 </li>
               </ol>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-[#ef4444]/60 mt-1">
                 On <strong>Chrome</strong>: lock icon → Notifications → Allow.&nbsp;
                 On <strong>Firefox</strong>: shield icon → Connection Secure → More Information → Permissions.&nbsp;
                 On <strong>Edge</strong>: lock icon → Permissions for this site → Notifications → Allow.
@@ -276,36 +276,36 @@ export default function RemindersPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total</p>
-              <p className="text-3xl font-bold text-gray-900">{items.length}</p>
+              <p className="text-sm text-[#8b8b9e] mb-1">Total</p>
+              <p className="text-3xl font-bold text-[#e8e8ed]">{items.length}</p>
             </div>
-            <div className="bg-blue-100 rounded-full p-3">
-              <Bell className="w-6 h-6 text-blue-600" />
+            <div className="bg-[#60a5fa]/10 rounded-full p-3">
+              <Bell className="w-6 h-6 text-[#60a5fa]" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Pending</p>
-              <p className="text-3xl font-bold text-amber-600">{pendingCount}</p>
+              <p className="text-sm text-[#8b8b9e] mb-1">Pending</p>
+              <p className="text-3xl font-bold text-[#f59e0b]">{pendingCount}</p>
             </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <Bell className="w-6 h-6 text-amber-600" />
+            <div className="bg-[#f59e0b]/10 rounded-full p-3">
+              <Bell className="w-6 h-6 text-[#f59e0b]" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Sent</p>
-              <p className="text-3xl font-bold text-green-600">{sentCount}</p>
+              <p className="text-sm text-[#8b8b9e] mb-1">Sent</p>
+              <p className="text-3xl font-bold text-[#4ade80]">{sentCount}</p>
             </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="bg-[#4ade80]/10 rounded-full p-3">
+              <CheckCircle className="w-6 h-6 text-[#4ade80]" />
             </div>
           </div>
         </div>
@@ -313,47 +313,47 @@ export default function RemindersPage() {
 
       {/* Create Reminder Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#16161e] border border-[#2a2a3a] rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">New Reminder</h2>
+              <h2 className="text-2xl font-bold text-[#e8e8ed] mb-4">New Reminder</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <label className="block text-sm font-medium text-[#8b8b9e] mb-2">Title</label>
                   <input
                     type="text"
                     placeholder="Enter reminder title..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+                  <label className="block text-sm font-medium text-[#8b8b9e] mb-2">Date & Time</label>
                   <input
                     type="datetime-local"
                     value={remindAt}
                     onChange={(e) => setRemindAt(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message <span className="text-gray-400">(Optional)</span>
+                  <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
+                    Message <span className="text-[#5c5c72]">(Optional)</span>
                   </label>
                   <textarea
                     placeholder="Add a note..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full px-4 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc] resize-none"
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => createReminder().catch(alert)}
                     disabled={!title || !remindAt}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-2 rounded-lg font-medium transition-colors"
+                    className="flex-1 bg-[#7c5cfc] hover:bg-[#6a4ce0] disabled:opacity-40 text-white py-2 rounded-lg font-medium transition-colors"
                   >
                     Create Reminder
                   </button>
@@ -364,7 +364,7 @@ export default function RemindersPage() {
                       setMessage("");
                       setRemindAt("");
                     }}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium transition-colors"
+                    className="flex-1 bg-[#1c1c27] hover:bg-[#222233] text-[#e8e8ed] border border-[#2a2a3a] py-2 rounded-lg font-medium transition-colors"
                   >
                     Cancel
                   </button>
@@ -381,10 +381,10 @@ export default function RemindersPage() {
           items.map((r) => (
             <div
               key={r.id}
-              className={`flex items-start gap-4 p-4 rounded-lg border-2 transition-colors ${
+              className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
                 r.is_sent
-                  ? "bg-green-50 border-green-200"
-                  : "bg-white border-gray-200 hover:border-gray-300"
+                  ? "bg-[#4ade80]/5 border-[#4ade80]/20"
+                  : "bg-[#16161e] border border-[#2a2a3a] hover:border-[#3a3a4a]"
               }`}
             >
               <button
@@ -393,20 +393,20 @@ export default function RemindersPage() {
               >
                 <CheckCircle
                   className={`w-6 h-6 transition-colors ${
-                    r.is_sent ? "text-green-600 fill-green-600" : "text-gray-300 hover:text-gray-500"
+                    r.is_sent ? "text-[#4ade80] fill-[#4ade80]" : "text-[#5c5c72] hover:text-[#8b8b9e]"
                   }`}
                 />
               </button>
 
               <div className="flex-1 min-w-0">
-                <p className={`font-medium ${r.is_sent ? "line-through text-gray-500" : "text-gray-900"}`}>
+                <p className={`font-medium ${r.is_sent ? "line-through text-[#5c5c72]" : "text-[#e8e8ed]"}`}>
                   {r.title}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[#5c5c72] mt-1">
                   {new Date(r.remind_at).toLocaleString()}
                 </p>
                 {r.message && (
-                  <p className="text-sm text-gray-600 mt-1">{r.message}</p>
+                  <p className="text-sm text-[#8b8b9e] mt-1">{r.message}</p>
                 )}
               </div>
 
@@ -414,15 +414,15 @@ export default function RemindersPage() {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium border ${
                     r.is_sent
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-amber-50 border-amber-200 text-amber-700"
+                      ? "bg-[#4ade80]/10 border-[#4ade80]/20 text-[#4ade80]"
+                      : "bg-[#f59e0b]/10 border-[#f59e0b]/20 text-[#f59e0b]"
                   }`}
                 >
                   {r.is_sent ? "Sent" : "Pending"}
                 </span>
                 <button
                   onClick={() => remove(r.id).catch(alert)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded-lg transition-colors"
+                  className="text-[#5c5c72] hover:text-[#ef4444] hover:bg-[#ef4444]/10 p-1 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -430,10 +430,10 @@ export default function RemindersPage() {
             </div>
           ))
         ) : (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium">No reminders yet</p>
-            <p className="text-sm text-gray-500 mt-1">Create a reminder to get started</p>
+          <div className="text-center py-12 bg-[#1c1c27] rounded-xl border-2 border-dashed border-[#2a2a3a]">
+            <Bell className="w-12 h-12 text-[#5c5c72] mx-auto mb-3" />
+            <p className="text-[#e8e8ed] font-medium">No reminders yet</p>
+            <p className="text-sm text-[#5c5c72] mt-1">Create a reminder to get started</p>
           </div>
         )}
       </div>

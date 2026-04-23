@@ -97,9 +97,28 @@ Deno.serve(async () => {
     });
   }
 
+  // Cache per-user notification preferences so we only hit `profiles` once per user.
+  const prefsByUser = new Map<string, { reminders: boolean }>();
+  async function reminderPrefFor(userId: string): Promise<boolean> {
+    const cached = prefsByUser.get(userId);
+    if (cached) return cached.reminders;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("notification_prefs")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // Default to true when no profile row exists yet, so users with no settings
+    // still receive the reminders they explicitly created.
+    const reminders = data?.notification_prefs?.reminders ?? true;
+    prefsByUser.set(userId, { reminders });
+    return reminders;
+  }
+
   for (const reminder of reminders) {
-    // Web push
-    if (reminder.send_push) {
+    // Web push — gated on the user's notification preference.
+    if (reminder.send_push && (await reminderPrefFor(reminder.user_id))) {
       const { data: subs } = await supabase
         .from("push_subscriptions")
         .select("subscription")
@@ -115,7 +134,8 @@ Deno.serve(async () => {
       }
     }
 
-    // Mark as sent
+    // Mark as sent regardless — a muted reminder is still a fired reminder,
+    // we just don't push it.
     await supabase
       .from("reminders")
       .update({ is_sent: true, sent_at: now })

@@ -219,12 +219,12 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Planner</h1>
-          <p className="text-gray-600">Schedule and organize your study sessions</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Study Planner</h1>
+          <p className="text-[#8b8b9e]">Schedule and organize your study sessions</p>
         </div>
         <button
           onClick={() => setShowSyncModal(true)}
-          className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#1c1c27] border border-[#2a2a3a] hover:bg-[#222233] text-[#e8e8ed] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Sync Calendars
@@ -232,27 +232,27 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+        <div className="lg:col-span-2 bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
+              <button onClick={prevMonth} className="p-2 hover:bg-[#1c1c27] rounded-lg transition-colors">
+                <ChevronRight className="w-5 h-5 text-[#8b8b9e] rotate-180" />
               </button>
-              <h2 className="text-xl font-bold text-gray-900 w-40">{monthName}</h2>
-              <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+              <h2 className="text-xl font-bold text-[#e8e8ed] w-40">{monthName}</h2>
+              <button onClick={nextMonth} className="p-2 hover:bg-[#1c1c27] rounded-lg transition-colors">
+                <ChevronRight className="w-5 h-5 text-[#8b8b9e]" />
               </button>
             </div>
-            <button className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+            <button className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
               <Plus className="w-4 h-4" />
               Add Task
             </button>
           </div>
 
-          <div className="bg-white">
+          <div>
             <div className="grid grid-cols-7 gap-2 mb-4">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center font-semibold text-gray-600 text-sm py-2">
+                <div key={day} className="text-center font-semibold text-[#5c5c72] text-sm py-2">
                   {day}
                 </div>
               ))}
@@ -285,22 +285,22 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                     }
                     className={`aspect-square rounded-lg border-2 p-2 cursor-pointer transition-colors ${
                       isCurrentMonth && day === todayDate
-                        ? "border-blue-500 bg-blue-100 text-blue-900 hover:bg-blue-200"
+                        ? "border-[#7c5cfc] bg-[#7c5cfc]/10 text-[#e8e8ed] hover:bg-[#7c5cfc]/15"
                         : tasksByDay[day] || eventsByDay[day]
-                        ? "border-amber-400 bg-amber-50 text-gray-900 hover:bg-amber-100"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700"
-                    } ${isSelected ? "ring-2 ring-blue-400" : ""}`}
+                        ? "border-[#f59e0b]/30 bg-[#f59e0b]/5 text-[#e8e8ed] hover:bg-[#f59e0b]/10"
+                        : "border-[#2a2a3a] hover:border-[#5c5c72] hover:bg-[#1c1c27] text-[#8b8b9e]"
+                    } ${isSelected ? "ring-2 ring-[#7c5cfc]" : ""}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">{day}</span>
                       <div className="flex items-center gap-1">
                         {eventsByDay[day] ? (
-                          <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-semibold text-[#60a5fa] bg-[#60a5fa]/10 border border-[#60a5fa]/20 px-2 py-0.5 rounded-full">
                             G{eventsByDay[day]}
                           </span>
                         ) : null}
                         {tasksByDay[day] ? (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-semibold text-[#f59e0b] bg-[#f59e0b]/10 px-2 py-0.5 rounded-full">
                             {tasksByDay[day]}
                           </span>
                         ) : null}
@@ -312,7 +312,7 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                           key={task.id}
                           draggable
                           onDragStart={(event) => handleDragStart(event, task.id)}
-                          className="text-[11px] font-medium bg-white/80 border border-white/60 rounded px-1 py-0.5 truncate"
+                          className="text-[11px] font-medium bg-[#1c1c27] border border-[#2a2a3a] text-[#8b8b9e] rounded px-1 py-0.5 truncate"
                           title={task.title}
                         >
                           {task.title}
@@ -331,14 +331,14 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                         .map((event) => (
                           <div
                             key={event.id}
-                            className="text-[11px] font-medium bg-blue-50 border border-blue-200 text-blue-700 rounded px-1 py-0.5 truncate"
+                            className="text-[11px] font-medium bg-[#60a5fa]/10 border border-[#60a5fa]/20 text-[#60a5fa] rounded px-1 py-0.5 truncate"
                             title={event.title}
                           >
                             {event.title}
                           </div>
                         ))}
                       {dayTasks.length > 2 && (
-                        <div className="text-[10px] text-gray-600">+{dayTasks.length - 2} more</div>
+                        <div className="text-[10px] text-[#5c5c72]">+{dayTasks.length - 2} more</div>
                       )}
                     </div>
                   </div>
@@ -348,9 +348,9 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Selected Day</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
+          <h2 className="text-xl font-bold text-[#e8e8ed] mb-1">Selected Day</h2>
+          <p className="text-sm text-[#8b8b9e] mb-4">
             {selectedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
           </p>
           <div className="space-y-3">
@@ -360,21 +360,21 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                   key={task.id}
                   className={`p-3 rounded-lg border ${
                     task.status === "completed"
-                      ? "bg-green-50 border-green-200"
-                      : "bg-amber-50 border-amber-200"
+                      ? "bg-[#4ade80]/10 border-[#4ade80]/20"
+                      : "bg-[#f59e0b]/10 border-[#f59e0b]/20"
                   }`}
                 >
                   <div className="flex items-start gap-2">
                     <span
                       className={`mt-1 h-2 w-2 rounded-full ${
-                        task.status === "completed" ? "bg-green-500" : "bg-amber-500"
+                        task.status === "completed" ? "bg-[#4ade80]" : "bg-[#f59e0b]"
                       }`}
                     ></span>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                      <p className="text-sm font-medium text-[#e8e8ed]">{task.title}</p>
                       <p
                         className={`text-xs mt-1 ${
-                          task.status === "completed" ? "text-green-700" : "text-amber-700"
+                          task.status === "completed" ? "text-[#4ade80]" : "text-[#f59e0b]"
                         }`}
                       >
                         {task.status === "completed" ? "Completed" : getDueLabel(task.dueDate)}
@@ -384,17 +384,17 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                 </div>
               ))
             ) : (
-              <div className="text-sm text-gray-500">No tasks scheduled for this day.</div>
+              <div className="text-sm text-[#5c5c72]">No tasks scheduled for this day.</div>
             )}
 
             {eventsForSelectedDate.length > 0 ? (
               <div className="pt-2">
-                <p className="text-xs font-semibold tracking-wide text-blue-700 mb-2">GOOGLE CALENDAR</p>
+                <p className="text-xs font-semibold tracking-wide text-[#60a5fa] mb-2">GOOGLE CALENDAR</p>
                 <div className="space-y-2">
                   {eventsForSelectedDate.map((event) => (
-                    <div key={event.id} className="p-3 rounded-lg border border-blue-200 bg-blue-50">
-                      <p className="text-sm font-medium text-blue-900">{event.title}</p>
-                      <p className="text-xs text-blue-700 mt-1">
+                    <div key={event.id} className="p-3 rounded-lg border border-[#60a5fa]/20 bg-[#60a5fa]/10">
+                      <p className="text-sm font-medium text-[#60a5fa]">{event.title}</p>
+                      <p className="text-xs text-[#60a5fa]/70 mt-1">
                         {event.allDay
                           ? "All day"
                           : new Date(event.start).toLocaleTimeString("en-US", {
@@ -412,29 +412,29 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
       </div>
 
       {showSyncModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] shadow-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Sync Calendars</h2>
+                <h2 className="text-2xl font-bold text-[#e8e8ed]">Sync Calendars</h2>
                 <button
                   onClick={() => setShowSyncModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-[#5c5c72] hover:text-[#e8e8ed] transition-colors"
                   aria-label="Close"
                 >
                   x
                 </button>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-[#8b8b9e] mb-4">
                 Connect your Google Calendar to import events into your planner.
               </p>
               <div className="space-y-3">
                 <button
                   onClick={startGoogleConnect}
-                  className="w-full border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-3 text-left transition-colors"
+                  className="w-full border border-[#2a2a3a] hover:border-[#5c5c72] hover:bg-[#1c1c27] rounded-lg px-4 py-3 text-left transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Google Calendar</p>
-                  <p className="text-xs text-gray-500">Connect your Google account to sync events</p>
+                  <p className="font-medium text-[#e8e8ed]">Google Calendar</p>
+                  <p className="text-xs text-[#5c5c72]">Connect your Google account to sync events</p>
                 </button>
 
                 <button
@@ -446,27 +446,27 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
                     }
                     syncGoogleCalendar(token);
                   }}
-                  className="w-full border border-blue-300 hover:border-blue-400 rounded-lg px-4 py-3 text-left transition-colors"
+                  className="w-full border border-[#7c5cfc]/30 hover:border-[#7c5cfc]/50 hover:bg-[#7c5cfc]/5 rounded-lg px-4 py-3 text-left transition-colors"
                   disabled={googleLoading}
                 >
-                  <p className="font-medium text-blue-900">{googleLoading ? "Syncing..." : "Sync Now"}</p>
-                  <p className="text-xs text-blue-600">Refresh your Google events in planner</p>
+                  <p className="font-medium text-[#7c5cfc]">{googleLoading ? "Syncing..." : "Sync Now"}</p>
+                  <p className="text-xs text-[#7c5cfc]/60">Refresh your Google events in planner</p>
                 </button>
 
                 <button
                   onClick={clearGoogleConnection}
-                  className="w-full border border-red-300 hover:border-red-400 rounded-lg px-4 py-3 text-left transition-colors"
+                  className="w-full border border-[#ef4444]/20 hover:border-[#ef4444]/40 hover:bg-[#ef4444]/5 rounded-lg px-4 py-3 text-left transition-colors"
                 >
-                  <p className="font-medium text-red-900">Disconnect Google Calendar</p>
-                  <p className="text-xs text-red-600">Remove saved token and synced events</p>
+                  <p className="font-medium text-[#ef4444]">Disconnect Google Calendar</p>
+                  <p className="text-xs text-[#ef4444]/60">Remove saved token and synced events</p>
                 </button>
 
-                <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <div className="text-xs text-[#8b8b9e] bg-[#1c1c27] border border-[#2a2a3a] rounded-lg px-3 py-2">
                   Status: {googleConnected ? `Connected (${googleEvents.length} events)` : "Not connected"}
                 </div>
 
                 {googleError ? (
-                  <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <div className="text-xs text-[#ef4444] bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-lg px-3 py-2">
                     {googleError}
                   </div>
                 ) : null}
@@ -474,7 +474,7 @@ export default function PlannerPage({ tasks, setTasks }: PlannerPageProps) {
               <div className="flex justify-end mt-5">
                 <button
                   onClick={() => setShowSyncModal(false)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="bg-[#1c1c27] hover:bg-[#222233] text-[#e8e8ed] border border-[#2a2a3a] px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Close
                 </button>
