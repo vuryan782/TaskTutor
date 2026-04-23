@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+=======
 
   import { defineConfig } from 'vite';
   import react from '@vitejs/plugin-react-swc';
@@ -58,3 +67,4 @@
       open: true,
     },
   });
+>>>>>>> 81c5d39a5b49c62a617b80c726f400c9833a1084
