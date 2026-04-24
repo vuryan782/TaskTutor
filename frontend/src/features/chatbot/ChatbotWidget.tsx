@@ -8,13 +8,25 @@ import {
   Brain,
   Calendar,
   TrendingUp,
+  CheckCircle,
+  Bell,
+  Users,
+  AlertCircle,
+  ArrowRight,
   Loader2,
   ChevronDown,
   Clock,
 } from "lucide-react";
-import { sendChatMessage, type ChatMessage } from "./chatbotService";
+import { sendChatMessage, type ChatMessage, type ChatAction } from "./chatbotService";
+import { supabase } from "../../supabaseClient";
 
 const RATE_LIMIT_COOLDOWN_MS = 60_000;
+const HISTORY_STORAGE_PREFIX = "tt:chat-history:";
+const MAX_PERSISTED_MESSAGES = 30;
+
+type Props = {
+  onNavigate?: (page: string) => void;
+};
 
 const QUICK_ACTIONS = [
   { label: "Summarize my notes", icon: BookOpen, prompt: "Summarize my study notes" },
@@ -24,15 +36,33 @@ const QUICK_ACTIONS = [
   { label: "Plan my session", icon: Calendar, prompt: "Help me plan a study session" },
 ];
 
-export default function ChatbotWidget() {
+export default function ChatbotWidget({ onNavigate }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [cooldownEndsAt, setCooldownEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [userId, setUserId] = useState<string | null>(null);
+  const [runningTool, setRunningTool] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hydratedRef = useRef(false);
+
+  const toolStatusLabel = (tool: string): string => {
+    switch (tool) {
+      case "create_task":
+        return "Creating task…";
+      case "create_reminder":
+        return "Setting reminder…";
+      case "create_quiz":
+        return "Generating quiz…";
+      case "create_group_session":
+        return "Scheduling session…";
+      default:
+        return `Running ${tool}…`;
+    }
+  };
 
   const cooldownRemainingSec =
     cooldownEndsAt !== null
@@ -64,6 +94,46 @@ export default function ChatbotWidget() {
     }
   }, [open]);
 
+  // Load user id once, then hydrate persisted chat history for this user.
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const uid = data?.session?.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        try {
+          const raw = localStorage.getItem(HISTORY_STORAGE_PREFIX + uid);
+          if (raw) {
+            const parsed = JSON.parse(raw) as ChatMessage[];
+            if (Array.isArray(parsed)) setMessages(parsed);
+          }
+        } catch {
+          // ignore corrupt history
+        }
+      }
+      hydratedRef.current = true;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Persist chat history whenever it changes, capped to the last N messages
+  // to avoid unbounded localStorage growth.
+  useEffect(() => {
+    if (!hydratedRef.current || !userId) return;
+    try {
+      const toStore = messages.slice(-MAX_PERSISTED_MESSAGES);
+      localStorage.setItem(
+        HISTORY_STORAGE_PREFIX + userId,
+        JSON.stringify(toStore)
+      );
+    } catch {
+      // ignore quota errors
+    }
+  }, [messages, userId]);
+
   const handleSend = async (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg || loading || isCoolingDown) return;
@@ -79,9 +149,56 @@ export default function ChatbotWidget() {
     setInput("");
     setLoading(true);
 
-    const reply = await sendChatMessage(msg, [...messages, userMsg]);
-    setMessages((prev) => [...prev, reply]);
+    // When the first text delta arrives we append a placeholder assistant
+    // message and grow its text in place. If the model only calls a tool (no
+    // text), this ID stays null and we just append the final message.
+    let streamingMsgId: string | null = null;
+
+    const reply = await sendChatMessage(msg, [...messages, userMsg], {
+      onTextDelta: (delta) => {
+        if (!delta) return;
+        if (!streamingMsgId) {
+          streamingMsgId = crypto.randomUUID();
+          const newId = streamingMsgId;
+          setLoading(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: newId,
+              role: "assistant",
+              text: delta,
+              timestamp: Date.now(),
+            },
+          ]);
+        } else {
+          const idToUpdate = streamingMsgId;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === idToUpdate ? { ...m, text: m.text + delta } : m
+            )
+          );
+        }
+      },
+      onToolStart: (tool) => {
+        setRunningTool(tool);
+      },
+      onToolEnd: () => {
+        setRunningTool(null);
+      },
+    });
+
+    // Replace the streaming placeholder with the final message (carries the
+    // action field and fully-formatted text). If nothing streamed, append.
+    if (streamingMsgId) {
+      const idToReplace = streamingMsgId;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === idToReplace ? { ...reply, id: idToReplace } : m))
+      );
+    } else {
+      setMessages((prev) => [...prev, reply]);
+    }
     setLoading(false);
+    setRunningTool(null);
 
     if (reply.error === "rate_limit") {
       const retrySec =
@@ -135,8 +252,15 @@ export default function ChatbotWidget() {
           </button>
           <button
             onClick={() => {
-              setOpen(false);
               setMessages([]);
+              if (userId) {
+                try {
+                  localStorage.removeItem(HISTORY_STORAGE_PREFIX + userId);
+                } catch {
+                  // ignore
+                }
+              }
+              setOpen(false);
             }}
             className="text-white/80 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition-colors"
             title="Close and clear"
@@ -178,35 +302,39 @@ export default function ChatbotWidget() {
         )}
 
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={msg.id} className="space-y-2">
             <div
-              className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-[#7c5cfc] text-white rounded-2xl rounded-br-md"
-                  : "bg-[#1c1c27] text-[#e8e8ed] rounded-2xl rounded-bl-md"
-              }`}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {msg.role === "assistant" ? (
-                <div
-                  className="chatbot-prose"
-                  dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.text) }}
-                />
-              ) : (
-                msg.text
-              )}
+              <div
+                className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
+                  msg.role === "user"
+                    ? "bg-[#7c5cfc] text-white rounded-2xl rounded-br-md"
+                    : "bg-[#1c1c27] text-[#e8e8ed] rounded-2xl rounded-bl-md"
+                }`}
+              >
+                {msg.role === "assistant" ? (
+                  <div
+                    className="chatbot-prose"
+                    dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.text) }}
+                  />
+                ) : (
+                  msg.text
+                )}
+              </div>
             </div>
+            {msg.role === "assistant" && msg.action && (
+              <ActionCard action={msg.action} onNavigate={onNavigate} />
+            )}
           </div>
         ))}
 
-        {loading && (
+        {(loading || runningTool) && (
           <div className="flex justify-start">
             <div className="bg-[#1c1c27] rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex items-center gap-2 text-[#8b8b9e] text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Thinking...
+                {runningTool ? toolStatusLabel(runningTool) : "Thinking..."}
               </div>
             </div>
           </div>
@@ -277,6 +405,107 @@ export default function ChatbotWidget() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ActionCard({
+  action,
+  onNavigate,
+}: {
+  action: ChatAction;
+  onNavigate?: (page: string) => void;
+}) {
+  if (action.kind === "error") {
+    return (
+      <div className="flex items-start gap-2 bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-lg p-3 text-xs text-[#ef4444]">
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="font-semibold">Couldn't complete that</p>
+          <p className="text-[#ef4444]/80 mt-0.5">
+            {action.tool}: {action.message}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const config = {
+    task_created: {
+      icon: CheckCircle,
+      label: "Task created",
+      accent: "#60a5fa",
+      target: "tasks",
+      targetLabel: "Open Tasks",
+    },
+    reminder_created: {
+      icon: Bell,
+      label: "Reminder set",
+      accent: "#f59e0b",
+      target: "reminders",
+      targetLabel: "Open Reminders",
+    },
+    quiz_created: {
+      icon: FileQuestion,
+      label: "Quiz ready",
+      accent: "#a78bfa",
+      target: "quizzes",
+      targetLabel: "Open Quizzes",
+    },
+    session_created: {
+      icon: Users,
+      label: "Group session scheduled",
+      accent: "#4ade80",
+      target: "group",
+      targetLabel: "Open Group Study",
+    },
+  }[action.kind];
+
+  const Icon = config.icon;
+
+  const detail = (() => {
+    switch (action.kind) {
+      case "task_created":
+        return `${action.title} · due ${new Date(action.dueDate).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · ${action.priority}`;
+      case "reminder_created":
+        return `${action.title} · fires ${new Date(action.remindAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+      case "quiz_created":
+        return `${action.topic} · ${action.subject} · ${action.questionCount} questions`;
+      case "session_created":
+        return `${action.title} · ${action.subject} · code ${action.sessionCode}`;
+    }
+  })();
+
+  return (
+    <div
+      className="flex items-center gap-3 rounded-xl p-3 text-xs"
+      style={{
+        backgroundColor: `${config.accent}12`,
+        borderColor: `${config.accent}33`,
+        borderWidth: 1,
+      }}
+    >
+      <div
+        className="p-2 rounded-lg flex-shrink-0"
+        style={{ backgroundColor: `${config.accent}22`, color: config.accent }}
+      >
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-[#e8e8ed]">{config.label}</p>
+        <p className="text-[#8b8b9e] truncate">{detail}</p>
+      </div>
+      {onNavigate && (
+        <button
+          type="button"
+          onClick={() => onNavigate(config.target)}
+          className="flex items-center gap-1 text-xs font-medium whitespace-nowrap hover:opacity-80 transition-opacity"
+          style={{ color: config.accent }}
+        >
+          {config.targetLabel}
+          <ArrowRight className="w-3 h-3" />
+        </button>
+      )}
     </div>
   );
 }

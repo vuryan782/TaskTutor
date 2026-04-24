@@ -480,7 +480,7 @@ export default function App() {
         <main className="flex-1 overflow-auto p-8">{renderPage()}</main>
       </div>
 
-      <ChatbotWidget />
+      <ChatbotWidget onNavigate={setCurrentPage} />
 
       <SearchPalette
         open={searchOpen}
