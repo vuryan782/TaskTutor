@@ -140,27 +140,27 @@ export default function RevisionPlannerPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-3xl font-bold">Study Plan Generator</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-[#e8e8ed]">Study Plan Generator</h1>
+        <p className="text-[#8b8b9e]">
           Automatically generate a structured study plan.
         </p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border space-y-4">
+      <div className="bg-[#16161e] p-6 rounded-xl border border-[#2a2a3a] space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
             Subject
           </label>
           <input
             placeholder="e.g. Operating Systems"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
             Priority
           </label>
           <select
@@ -168,7 +168,7 @@ export default function RevisionPlannerPage() {
             onChange={(e) =>
               setPriority(e.target.value as "low" | "medium" | "high")
             }
-            className="w-full border p-2 rounded"
+            className="w-full bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
           >
             <option value="low">Low Priority</option>
             <option value="medium">Medium Priority</option>
@@ -178,46 +178,46 @@ export default function RevisionPlannerPage() {
 
         <div className="flex gap-4">
           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
               Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="w-full bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
             />
           </div>
 
           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
               End Date
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="border p-2 rounded w-full"
+              className="w-full bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
             Topics (comma separated)
           </label>
           <input
             placeholder="Processes, Threads, Scheduling, Memory, Deadlocks"
             value={topics}
             onChange={(e) => setTopics(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
           />
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={handleGeneratePreview}
-            className="bg-gray-800 text-white px-4 py-2 rounded"
+            className="bg-[#1c1c27] hover:bg-[#222233] text-[#e8e8ed] border border-[#2a2a3a] px-4 py-2 rounded-lg transition-colors"
           >
             Generate Preview
           </button>
@@ -225,24 +225,24 @@ export default function RevisionPlannerPage() {
           <button
             onClick={handleSavePlan}
             disabled={preview.length === 0 || loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60"
+            className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-4 py-2 rounded-lg disabled:opacity-60 transition-colors"
           >
             {loading ? "Saving..." : "Save Plan"}
           </button>
         </div>
 
-        {message && <p className="text-sm">{message}</p>}
+        {message && <p className="text-sm text-[#8b8b9e]">{message}</p>}
       </div>
 
       {preview.length > 0 && (
-        <div className="bg-white p-6 rounded-xl border">
-          <h2 className="text-lg font-semibold mb-3">Generated Plan</h2>
+        <div className="bg-[#16161e] p-6 rounded-xl border border-[#2a2a3a]">
+          <h2 className="text-lg font-semibold text-[#e8e8ed] mb-3">Generated Plan</h2>
 
           <div className="space-y-2">
             {preview.map((item, i) => (
-              <div key={i} className="p-2 border rounded">
-                <div className="text-sm font-medium">{item.title}</div>
-                <div className="text-xs text-gray-500">{item.date}</div>
+              <div key={i} className="p-2 bg-[#1c1c27] border border-[#2a2a3a] rounded-lg">
+                <div className="text-sm font-medium text-[#e8e8ed]">{item.title}</div>
+                <div className="text-xs text-[#5c5c72]">{item.date}</div>
               </div>
             ))}
           </div>

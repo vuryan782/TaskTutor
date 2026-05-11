@@ -1,7 +1,19 @@
-import { Copy, ExternalLink, FileText, Link2, Lock, Plus, Trash2, Upload, Users, Video } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  Copy,
+  ExternalLink,
+  FileText,
+  Link2,
+  Lock,
+  Plus,
+  Trash2,
+  Upload,
+  Users,
+  Video,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "../../supabaseClient";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import type { GroupSession } from "../../types/study";
 
 type GroupStudyPageProps = {
@@ -25,7 +37,10 @@ type SharedMaterial = {
 
 const MATERIALS_BUCKET = "group-materials";
 
-export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProps) {
+export default function GroupStudyPage({
+  userId,
+  userLabel,
+}: GroupStudyPageProps) {
   const [sessions, setSessions] = useState<GroupSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -33,18 +48,45 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
   const [creating, setCreating] = useState(false);
   const [busySessionId, setBusySessionId] = useState<string | null>(null);
   const [closingSessionId, setClosingSessionId] = useState<string | null>(null);
+  const [pendingCloseSession, setPendingCloseSession] = useState<GroupSession | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const [joiningByCode, setJoiningByCode] = useState(false);
   const [copiedSessionId, setCopiedSessionId] = useState<string | null>(null);
-  const [activeRoom, setActiveRoom] = useState<{ sessionId: string; title: string; url: string } | null>(null);
-  const [materialsBySession, setMaterialsBySession] = useState<Record<string, SharedMaterial[]>>({});
-  const [selectedMaterialsSessionId, setSelectedMaterialsSessionId] = useState("");
+  const [activeRoom, setActiveRoom] = useState<{
+    sessionId: string;
+    title: string;
+    url: string;
+  } | null>(null);
+  const [materialsBySession, setMaterialsBySession] = useState<
+    Record<string, SharedMaterial[]>
+  >({});
+  const [selectedMaterialsSessionId, setSelectedMaterialsSessionId] =
+    useState("");
   const [newMaterialTitle, setNewMaterialTitle] = useState("");
   const [newMaterialUrl, setNewMaterialUrl] = useState("");
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [uploadingMaterial, setUploadingMaterial] = useState(false);
-  const [openingMaterialId, setOpeningMaterialId] = useState<string | null>(null);
-  const [removingMaterialId, setRemovingMaterialId] = useState<string | null>(null);
+  const [openingMaterialId, setOpeningMaterialId] = useState<string | null>(
+    null,
+  );
+  const [removingMaterialId, setRemovingMaterialId] = useState<string | null>(
+    null,
+  );
+
+  const syncChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
+    null,
+  );
+  const materialsRef = useRef<Record<string, SharedMaterial[]>>({});
+
+  const [activeViewerMaterial, setActiveViewerMaterial] = useState<{
+    id: string;
+    sessionId: string;
+    title: string;
+    url: string;
+    materialType: "link" | "file";
+    mimeType: string | null;
+    openedBy: string;
+  } | null>(null);
 
   const [newSession, setNewSession] = useState({
     title: "",
@@ -57,12 +99,16 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
   const normalizeCode = (code: string) => code.trim().toUpperCase();
   const makeSessionCode = () => {
     const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const chars = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]);
+    const chars = Array.from(
+      { length: 6 },
+      () => alphabet[Math.floor(Math.random() * alphabet.length)],
+    );
     return `${chars.slice(0, 3).join("")}-${chars.slice(3).join("")}`;
   };
 
   const getInviteLink = (sessionCode: string) => {
-    if (typeof window === "undefined") return `?invite=${encodeURIComponent(sessionCode)}`;
+    if (typeof window === "undefined")
+      return `?invite=${encodeURIComponent(sessionCode)}`;
     return `${window.location.origin}${window.location.pathname}?invite=${encodeURIComponent(sessionCode)}`;
   };
 
@@ -102,12 +148,14 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
 
       const { data: sessionRows, error: sessionsError } = await supabase
         .from("group_sessions")
-        .select("id, title, subject, starts_at, is_live, is_private, session_code, host_user_id")
+        .select(
+          "id, title, subject, starts_at, is_live, is_private, session_code, host_user_id",
+        )
         .order("starts_at", { ascending: true });
 
       if (sessionsError) {
         setErrorMsg(
-          `Could not load sessions (${sessionsError.code ?? "unknown"}): ${sessionsError.message}`
+          `Could not load sessions (${sessionsError.code ?? "unknown"}): ${sessionsError.message}`,
         );
         return;
       }
@@ -118,12 +166,14 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
 
       if (membersError) {
         setErrorMsg(
-          `Could not load members (${membersError.code ?? "unknown"}): ${membersError.message}`
+          `Could not load members (${membersError.code ?? "unknown"}): ${membersError.message}`,
         );
         return;
       }
 
-      const membersBySession = (memberRows ?? []).reduce<Record<string, string[]>>((acc, row) => {
+      const membersBySession = (memberRows ?? []).reduce<
+        Record<string, string[]>
+      >((acc, row) => {
         const list = acc[row.session_id] ?? [];
         list.push(row.user_id);
         acc[row.session_id] = list;
@@ -177,7 +227,11 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
         .select(fullSelect)
         .order("created_at", { ascending: false });
 
-      if (error && (error.message.includes("material_type") || error.message.includes("storage_path"))) {
+      if (
+        error &&
+        (error.message.includes("material_type") ||
+          error.message.includes("storage_path"))
+      ) {
         // Fallback for older table schema before file support is enabled.
         const fallback = await supabase
           .from("group_session_materials")
@@ -190,35 +244,36 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       if (error) {
         if (error.code === "PGRST205") {
           setErrorMsg(
-            "Shared materials table not found. Create `group_session_materials` in Supabase to enable collaborative links and files."
+            "Shared materials table not found. Create `group_session_materials` in Supabase to enable collaborative links and files.",
           );
           return;
         }
-        setErrorMsg(`Could not load materials (${error.code ?? "unknown"}): ${error.message}`);
+        setErrorMsg(
+          `Could not load materials (${error.code ?? "unknown"}): ${error.message}`,
+        );
         return;
       }
 
-      const grouped = ((data ?? []) as SharedMaterialRow[]).reduce<Record<string, SharedMaterial[]>>(
-        (acc, row) => {
-          const list = acc[row.session_id] ?? [];
-          list.push({
-            id: row.id,
-            sessionId: row.session_id,
-            title: row.title,
-            url: row.url,
-            materialType: row.material_type === "file" ? "file" : "link",
-            storagePath: row.storage_path,
-            fileName: row.file_name,
-            mimeType: row.mime_type,
-            fileSize: row.file_size,
-            createdAt: row.created_at,
-            createdBy: row.created_by,
-          });
-          acc[row.session_id] = list;
-          return acc;
-        },
-        {}
-      );
+      const grouped = ((data ?? []) as SharedMaterialRow[]).reduce<
+        Record<string, SharedMaterial[]>
+      >((acc, row) => {
+        const list = acc[row.session_id] ?? [];
+        list.push({
+          id: row.id,
+          sessionId: row.session_id,
+          title: row.title,
+          url: row.url,
+          materialType: row.material_type === "file" ? "file" : "link",
+          storagePath: row.storage_path,
+          fileName: row.file_name,
+          mimeType: row.mime_type,
+          fileSize: row.file_size,
+          createdAt: row.created_at,
+          createdBy: row.created_by,
+        });
+        acc[row.session_id] = list;
+        return acc;
+      }, {});
 
       setMaterialsBySession(grouped);
     } catch (err) {
@@ -226,43 +281,131 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     }
   };
 
+  const resolveMaterialUrl = async (material: SharedMaterial) => {
+    if (material.materialType === "link") {
+      return material.url;
+    }
+
+    if (!material.storagePath) {
+      throw new Error("This file is missing a storage path.");
+    }
+
+    const { data, error } = await supabase.storage
+      .from(MATERIALS_BUCKET)
+      .createSignedUrl(material.storagePath, 60 * 60);
+
+    if (error || !data?.signedUrl) {
+      throw new Error(error?.message || "Could not create signed URL.");
+    }
+
+    return data.signedUrl;
+  };
+
+  const openMaterialInViewer = async (
+    material: SharedMaterial,
+    openedBy: string,
+  ) => {
+    const resolvedUrl = await resolveMaterialUrl(material);
+
+    setActiveViewerMaterial({
+      id: material.id,
+      sessionId: material.sessionId,
+      title: material.title,
+      url: resolvedUrl,
+      materialType: material.materialType,
+      mimeType: material.mimeType,
+      openedBy,
+    });
+  };
+
+  useEffect(() => {
+    materialsRef.current = materialsBySession;
+  }, [materialsBySession]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadSessions(), loadMaterials()]).finally(() => setLoading(false));
+    Promise.all([loadSessions(), loadMaterials()]).finally(() =>
+      setLoading(false),
+    );
+    // useEffect(() => {
+    //   setLoading(true);
+    //   Promise.all([loadSessions(), loadMaterials()]).finally(() => setLoading(false));
 
     const channel = supabase
-      .channel(`group-study-${userId}`)
+      .channel("group-study-sync", {
+        config: { broadcast: { self: false } },
+      })
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "group_sessions" },
         () => {
           loadSessions();
-        }
+        },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "group_session_members" },
         () => {
           loadSessions();
-        }
+        },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "group_session_materials" },
         () => {
           loadMaterials();
-        }
+        },
       )
+      .on("broadcast", { event: "material-opened" }, async ({ payload }) => {
+        const sessionId = payload?.sessionId as string | undefined;
+        const materialId = payload?.materialId as string | undefined;
+        const openedBy =
+          (payload?.openedBy as string | undefined) ?? "A participant";
+
+        if (!sessionId || !materialId) return;
+
+        const material = (materialsRef.current[sessionId] ?? []).find(
+          (item) => item.id === materialId,
+        );
+
+        if (!material) {
+          await loadMaterials();
+          const refreshedMaterial = (
+            materialsRef.current[sessionId] ?? []
+          ).find((item) => item.id === materialId);
+          if (!refreshedMaterial) return;
+
+          try {
+            await openMaterialInViewer(refreshedMaterial, openedBy);
+          } catch (err) {
+            setErrorMsg(
+              toReadableError(err, "Could not open shared material."),
+            );
+          }
+          return;
+        }
+
+        try {
+          await openMaterialInViewer(material, openedBy);
+        } catch (err) {
+          setErrorMsg(toReadableError(err, "Could not open shared material."));
+        }
+      })
       .subscribe();
+
+    syncChannelRef.current = channel;
 
     return () => {
       supabase.removeChannel(channel);
+      syncChannelRef.current = null;
     };
   }, [userId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const inviteCode = new URLSearchParams(window.location.search).get("invite");
+    const inviteCode = new URLSearchParams(window.location.search).get(
+      "invite",
+    );
     if (inviteCode) {
       setJoinCode(normalizeCode(inviteCode));
     }
@@ -313,10 +456,19 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       if (data?.id) {
         await supabase
           .from("group_session_members")
-          .upsert({ session_id: data.id, user_id: userId }, { onConflict: "session_id,user_id" });
+          .upsert(
+            { session_id: data.id, user_id: userId },
+            { onConflict: "session_id,user_id" },
+          );
       }
 
-      setNewSession({ title: "", subject: "", startsAt: "", isLive: false, isPrivate: false });
+      setNewSession({
+        title: "",
+        subject: "",
+        startsAt: "",
+        isLive: false,
+        isPrivate: false,
+      });
       setShowCreateForm(false);
       loadSessions();
     } catch (err) {
@@ -331,7 +483,10 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     try {
       const { error } = await supabase
         .from("group_session_members")
-        .upsert({ session_id: sessionId, user_id: userId }, { onConflict: "session_id,user_id" });
+        .upsert(
+          { session_id: sessionId, user_id: userId },
+          { onConflict: "session_id,user_id" },
+        );
 
       if (error) {
         setErrorMsg(error.message);
@@ -382,7 +537,9 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
         .single();
 
       if (error || !data?.id) {
-        setErrorMsg("Invalid session code. Ask your peer for a valid invite code.");
+        setErrorMsg(
+          "Invalid session code. Ask your peer for a valid invite code.",
+        );
         return;
       }
 
@@ -401,7 +558,9 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       setCopiedSessionId(session.id);
       setTimeout(() => setCopiedSessionId(null), 1800);
     } catch {
-      setErrorMsg("Could not copy invite link. Copy this manually: " + inviteLink);
+      setErrorMsg(
+        "Could not copy invite link. Copy this manually: " + inviteLink,
+      );
     }
   };
 
@@ -411,7 +570,9 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       setCopiedSessionId(session.id);
       setTimeout(() => setCopiedSessionId(null), 1800);
     } catch {
-      setErrorMsg("Could not copy code. Share this manually: " + session.sessionCode);
+      setErrorMsg(
+        "Could not copy code. Share this manually: " + session.sessionCode,
+      );
     }
   };
 
@@ -425,14 +586,17 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleCloseSession = async (session: GroupSession) => {
+  const handleCloseSession = (session: GroupSession) => {
     if (session.hostUserId !== userId) {
       setErrorMsg("Only the host can close this session.");
       return;
     }
+    setPendingCloseSession(session);
+  };
 
-    const ok = window.confirm(`Close session \"${session.title}\" for all members?`);
-    if (!ok) return;
+  const confirmCloseSession = async () => {
+    const session = pendingCloseSession;
+    if (!session) return;
 
     setClosingSessionId(session.id);
     setErrorMsg("");
@@ -462,6 +626,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       setErrorMsg(toReadableError(err, "Could not close session."));
     } finally {
       setClosingSessionId(null);
+      setPendingCloseSession(null);
     }
   };
 
@@ -472,7 +637,8 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     return `https://${trimmed}`;
   };
 
-  const sanitizeFileName = (name: string) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const sanitizeFileName = (name: string) =>
+    name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
   const formatFileSize = (size: number | null) => {
     if (!size || size <= 0) return "Unknown size";
@@ -492,7 +658,9 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     return `${who} • ${when}`;
   };
 
-  const handleUploadMaterialFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadMaterialFile = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -507,10 +675,12 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     setUploadingMaterial(true);
     setErrorMsg("");
     try {
-      const upload = await supabase.storage.from(MATERIALS_BUCKET).upload(filePath, file, {
-        upsert: false,
-        contentType: file.type || "application/octet-stream",
-      });
+      const upload = await supabase.storage
+        .from(MATERIALS_BUCKET)
+        .upload(filePath, file, {
+          upsert: false,
+          contentType: file.type || "application/octet-stream",
+        });
 
       if (upload.error) {
         setErrorMsg(`File upload failed: ${upload.error.message}`);
@@ -547,31 +717,23 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
   };
 
   const handleOpenMaterial = async (material: SharedMaterial) => {
-    if (material.materialType === "link") {
-      window.open(material.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    if (!material.storagePath) {
-      setErrorMsg("This file is missing a storage path.");
-      return;
-    }
-
     setOpeningMaterialId(material.id);
+    setErrorMsg("");
+
     try {
-      const { data, error } = await supabase
-        .storage
-        .from(MATERIALS_BUCKET)
-        .createSignedUrl(material.storagePath, 60 * 60);
+      await openMaterialInViewer(material, userLabel);
 
-      if (error || !data?.signedUrl) {
-        setErrorMsg(error?.message || "Could not open file.");
-        return;
-      }
-
-      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      await syncChannelRef.current?.send({
+        type: "broadcast",
+        event: "material-opened",
+        payload: {
+          sessionId: material.sessionId,
+          materialId: material.id,
+          openedBy: userLabel,
+        },
+      });
     } catch (err) {
-      setErrorMsg(toReadableError(err, "Could not open file."));
+      setErrorMsg(toReadableError(err, "Could not open shared material."));
     } finally {
       setOpeningMaterialId(null);
     }
@@ -581,7 +743,9 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     e.preventDefault();
     const sessionId = selectedMaterialsSessionId;
     if (!sessionId) {
-      setErrorMsg("Join a session first, then choose it to add shared materials.");
+      setErrorMsg(
+        "Join a session first, then choose it to add shared materials.",
+      );
       return;
     }
     const title = newMaterialTitle.trim();
@@ -631,14 +795,21 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     setRemovingMaterialId(material.id);
     try {
       if (material.materialType === "file" && material.storagePath) {
-        const storageDelete = await supabase.storage.from(MATERIALS_BUCKET).remove([material.storagePath]);
+        const storageDelete = await supabase.storage
+          .from(MATERIALS_BUCKET)
+          .remove([material.storagePath]);
         if (storageDelete.error) {
-          setErrorMsg(`Could not remove file from storage: ${storageDelete.error.message}`);
+          setErrorMsg(
+            `Could not remove file from storage: ${storageDelete.error.message}`,
+          );
           return;
         }
       }
 
-      const { error } = await supabase.from("group_session_materials").delete().eq("id", material.id);
+      const { error } = await supabase
+        .from("group_session_materials")
+        .delete()
+        .eq("id", material.id);
       if (error) {
         setErrorMsg(error.message);
         return;
@@ -652,12 +823,16 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
   };
 
   const visibleSessions = sessions.filter(
-    (session) => !session.isPrivate || session.joined || session.hostUserId === userId
+    (session) =>
+      !session.isPrivate || session.joined || session.hostUserId === userId,
   );
   const joinedSessions = sessions.filter((session) => session.joined);
-  const selectedMaterialsSession = joinedSessions.find((session) => session.id === selectedMaterialsSessionId) ?? null;
+  const selectedMaterialsSession =
+    joinedSessions.find(
+      (session) => session.id === selectedMaterialsSessionId,
+    ) ?? null;
   const materialsForSelectedSession = selectedMaterialsSession
-    ? materialsBySession[selectedMaterialsSession.id] ?? []
+    ? (materialsBySession[selectedMaterialsSession.id] ?? [])
     : [];
 
   useEffect(() => {
@@ -666,7 +841,11 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       return;
     }
 
-    if (!joinedSessions.some((session) => session.id === selectedMaterialsSessionId)) {
+    if (
+      !joinedSessions.some(
+        (session) => session.id === selectedMaterialsSessionId,
+      )
+    ) {
       setSelectedMaterialsSessionId(joinedSessions[0].id);
     }
   }, [joinedSessions, selectedMaterialsSessionId]);
@@ -675,32 +854,36 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Group Study</h1>
-          <p className="text-gray-600">Create sessions, invite peers, and study together live.</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Group Study</h1>
+          <p className="text-[#8b8b9e]">
+            Create sessions, invite peers, and study together live.
+          </p>
         </div>
         <button
           onClick={() => setShowCreateForm((prev) => !prev)}
-          className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
           {showCreateForm ? "Cancel" : "Create Session"}
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Join with session code</h2>
+      <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-4 md:p-6">
+        <h2 className="text-lg font-semibold text-[#e8e8ed] mb-3">
+          Join with session code
+        </h2>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             placeholder="ABC-123"
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
+            className="flex-1 px-4 py-3 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
           />
           <button
             type="button"
             onClick={handleJoinByCode}
             disabled={joiningByCode}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg disabled:opacity-60"
+            className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-5 py-3 rounded-lg disabled:opacity-60"
           >
             {joiningByCode ? "Joining..." : "Join by Code"}
           </button>
@@ -708,41 +891,64 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       </div>
 
       {errorMsg ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMsg}</div>
+        <div className="rounded-lg border border-[#ef4444]/20 bg-[#ef4444]/10 px-4 py-3 text-sm text-[#ef4444]">
+          {errorMsg}
+        </div>
       ) : null}
 
       {showCreateForm ? (
-        <form onSubmit={handleCreateSession} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <form
+          onSubmit={handleCreateSession}
+          className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 space-y-4"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Session title</label>
+              <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
+                Session title
+              </label>
               <input
                 value={newSession.title}
-                onChange={(e) => setNewSession((prev) => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setNewSession((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Calculus Problem Solving"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
+                Subject
+              </label>
               <input
                 value={newSession.subject}
-                onChange={(e) => setNewSession((prev) => ({ ...prev, subject: e.target.value }))}
+                onChange={(e) =>
+                  setNewSession((prev) => ({
+                    ...prev,
+                    subject: e.target.value,
+                  }))
+                }
                 placeholder="Math"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start time</label>
+              <label className="block text-sm font-medium text-[#8b8b9e] mb-2">
+                Start time
+              </label>
               <input
                 type="datetime-local"
                 value={newSession.startsAt}
-                onChange={(e) => setNewSession((prev) => ({ ...prev, startsAt: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                onChange={(e) =>
+                  setNewSession((prev) => ({
+                    ...prev,
+                    startsAt: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-3 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                 disabled={newSession.isLive}
               />
             </div>
@@ -751,10 +957,15 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
               <input
                 type="checkbox"
                 checked={newSession.isLive}
-                onChange={(e) => setNewSession((prev) => ({ ...prev, isLive: e.target.checked }))}
-                className="w-5 h-5 rounded border-gray-300"
+                onChange={(e) =>
+                  setNewSession((prev) => ({
+                    ...prev,
+                    isLive: e.target.checked,
+                  }))
+                }
+                className="w-5 h-5 rounded border-[#2a2a3a]"
               />
-              <span className="text-sm text-gray-700">Start live now</span>
+              <span className="text-sm text-[#8b8b9e]">Start live now</span>
             </label>
           </div>
 
@@ -762,16 +973,23 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
             <input
               type="checkbox"
               checked={newSession.isPrivate}
-              onChange={(e) => setNewSession((prev) => ({ ...prev, isPrivate: e.target.checked }))}
-              className="w-5 h-5 rounded border-gray-300"
+              onChange={(e) =>
+                setNewSession((prev) => ({
+                  ...prev,
+                  isPrivate: e.target.checked,
+                }))
+              }
+              className="w-5 h-5 rounded border-[#2a2a3a]"
             />
-            <span className="text-sm text-gray-700">Private session (only users with invite code/link can join)</span>
+            <span className="text-sm text-[#8b8b9e]">
+              Private session (only users with invite code/link can join)
+            </span>
           </label>
 
           <button
             type="submit"
             disabled={creating}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-lg disabled:opacity-60"
+            className="bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-5 py-2.5 rounded-lg disabled:opacity-60"
           >
             {creating ? "Creating..." : "Create Session"}
           </button>
@@ -779,24 +997,30 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       ) : null}
 
       {activeRoom ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 space-y-3">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-4 md:p-6 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Live Room: {activeRoom.title}</h2>
-              <p className="text-sm text-gray-600">Screen share, audio, video, and chat are available in this room.</p>
+              <h2 className="text-lg font-semibold text-[#e8e8ed]">
+                Live Room: {activeRoom.title}
+              </h2>
+              <p className="text-sm text-[#8b8b9e]">
+                Screen share, audio, video, and chat are available in this room.
+              </p>
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => window.open(activeRoom.url, "_blank", "noopener,noreferrer")}
-                className="px-3 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                onClick={() =>
+                  window.open(activeRoom.url, "_blank", "noopener,noreferrer")
+                }
+                className="px-3 py-2 text-sm rounded-lg border border-[#2a2a3a] text-[#8b8b9e] hover:bg-[#1c1c27] hover:text-[#e8e8ed]"
               >
                 Open in New Tab
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRoom(null)}
-                className="px-3 py-2 text-sm rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200"
+                className="px-3 py-2 text-sm rounded-lg bg-[#1c1c27] hover:bg-[#222233] text-[#e8e8ed]"
               >
                 Close Room
               </button>
@@ -806,7 +1030,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
           <iframe
             title="Task Tutor Live Room"
             src={activeRoom.url}
-            className="w-full h-[65vh] rounded-lg border border-gray-200"
+            className="w-full h-[65vh] rounded-lg border border-[#2a2a3a]"
             allow="camera; microphone; display-capture; fullscreen; clipboard-read; clipboard-write"
           />
         </div>
@@ -815,48 +1039,65 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {loading ? (
-            <div className="bg-white border border-gray-200 rounded-xl p-6 text-gray-600">Loading sessions...</div>
+            <div className="bg-[#16161e] border border-[#2a2a3a] rounded-xl p-6 text-[#8b8b9e]">
+              Loading sessions...
+            </div>
           ) : visibleSessions.length === 0 ? (
-            <div className="bg-white border border-dashed border-gray-300 rounded-xl p-8 text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No sessions yet</h3>
-              <p className="text-gray-600">Create a session or ask a peer for a private invite code.</p>
+            <div className="bg-[#16161e] border border-dashed border-[#2a2a3a] rounded-xl p-8 text-center">
+              <h3 className="text-lg font-semibold text-[#e8e8ed] mb-2">
+                No sessions yet
+              </h3>
+              <p className="text-[#8b8b9e]">
+                Create a session or ask a peer for a private invite code.
+              </p>
             </div>
           ) : (
             visibleSessions.map((session) => (
-              <div key={session.id} className="bg-white border border-gray-200 rounded-xl p-6">
+              <div
+                key={session.id}
+                className="bg-[#16161e] border border-[#2a2a3a] rounded-xl p-6"
+              >
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="bg-violet-600 rounded-full p-2">
+                    <div className="bg-[#7c5cfc] rounded-full p-2">
                       <Users className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 truncate">{session.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        {session.subject} • {session.memberCount} {session.memberCount === 1 ? "member" : "members"}
+                      <h3 className="font-bold text-[#e8e8ed] truncate">
+                        {session.title}
+                      </h3>
+                      <p className="text-sm text-[#8b8b9e]">
+                        {session.subject} • {session.memberCount}{" "}
+                        {session.memberCount === 1 ? "member" : "members"}
                       </p>
-                      <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2">
+                      <div className="text-xs text-[#5c5c72] mt-1 flex flex-wrap items-center gap-2">
                         <span>Code: {session.sessionCode || "N/A"}</span>
                         {session.isPrivate ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#f59e0b]/10 text-[#f59e0b]">
                             <Lock className="w-3 h-3" />
                             Private
                           </span>
                         ) : null}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-[#5c5c72] mt-1">
                         {session.isLive
                           ? "Live now"
-                          : `Starts ${new Date(session.startsAt).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}`}
+                          : `Starts ${new Date(session.startsAt).toLocaleString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              },
+                            )}`}
                       </p>
                     </div>
                   </div>
                   {session.isLive ? (
-                    <span className="bg-green-600 text-white text-xs px-3 py-1 rounded-full">Live</span>
+                    <span className="bg-[#4ade80] text-white text-xs px-3 py-1 rounded-full">
+                      Live
+                    </span>
                   ) : null}
                 </div>
 
@@ -864,7 +1105,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                   <button
                     type="button"
                     onClick={() => handleCopyCode(session)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2a2a3a] text-sm text-[#8b8b9e] hover:bg-[#1c1c27] hover:text-[#e8e8ed]"
                   >
                     <Copy className="w-4 h-4" />
                     Copy Code
@@ -872,21 +1113,27 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                   <button
                     type="button"
                     onClick={() => handleCopyInviteLink(session)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2a2a3a] text-sm text-[#8b8b9e] hover:bg-[#1c1c27] hover:text-[#e8e8ed]"
                   >
                     <Link2 className="w-4 h-4" />
                     Share Invite Link
                   </button>
-                  {copiedSessionId === session.id ? <span className="text-xs text-emerald-700 self-center">Copied</span> : null}
+                  {copiedSessionId === session.id ? (
+                    <span className="text-xs text-[#34d399] self-center">
+                      Copied
+                    </span>
+                  ) : null}
 
                   {session.hostUserId === userId ? (
                     <button
                       type="button"
                       onClick={() => handleCloseSession(session)}
                       disabled={closingSessionId === session.id}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-sm text-red-700 hover:bg-red-50 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#ef4444]/30 text-sm text-[#ef4444] hover:bg-[#ef4444]/10 disabled:opacity-60"
                     >
-                      {closingSessionId === session.id ? "Closing..." : "Close Session"}
+                      {closingSessionId === session.id
+                        ? "Closing..."
+                        : "Close Session"}
                     </button>
                   ) : null}
                 </div>
@@ -896,7 +1143,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                     <button
                       type="button"
                       onClick={() => handleOpenLiveRoom(session)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-[#34d399] hover:bg-[#2ec48a] text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Video className="w-4 h-4" />
                       Open Live Room
@@ -904,25 +1151,29 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                     <button
                       type="button"
                       onClick={() => handleOpenRoomInNewTab(session)}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors"
+                      className="flex-1 bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white py-3 rounded-lg transition-colors"
                     >
                       New Tab
                     </button>
                     <button
                       onClick={() => handleLeave(session.id)}
                       disabled={busySessionId === session.id}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-lg transition-colors disabled:opacity-60"
+                      className="flex-1 bg-[#1c1c27] hover:bg-[#222233] text-[#8b8b9e] py-3 rounded-lg transition-colors disabled:opacity-60"
                     >
-                      {busySessionId === session.id ? "Please wait..." : "Leave Session"}
+                      {busySessionId === session.id
+                        ? "Please wait..."
+                        : "Leave Session"}
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => handleJoin(session.id)}
                     disabled={busySessionId === session.id}
-                    className="w-full bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-lg transition-colors disabled:opacity-60"
+                    className="w-full bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white py-3 rounded-lg transition-colors disabled:opacity-60"
                   >
-                    {busySessionId === session.id ? "Please wait..." : "Join Session"}
+                    {busySessionId === session.id
+                      ? "Please wait..."
+                      : "Join Session"}
                   </button>
                 )}
               </div>
@@ -931,40 +1182,56 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Session Insights</h2>
+          <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
+            <h2 className="text-xl font-bold text-[#e8e8ed] mb-4">
+              Session Insights
+            </h2>
             <div className="space-y-3 text-sm">
-              <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
-                <p className="font-medium text-gray-900">Total sessions</p>
-                <p className="text-violet-700">{sessions.length}</p>
+              <div className="p-3 bg-[#60a5fa]/10 border border-[#60a5fa]/20 rounded-lg">
+                <p className="font-medium text-[#e8e8ed]">Total sessions</p>
+                <p className="text-[#60a5fa]">{sessions.length}</p>
               </div>
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="font-medium text-gray-900">Live right now</p>
-                <p className="text-green-700">{sessions.filter((s) => s.isLive).length}</p>
+              <div className="p-3 bg-[#4ade80]/10 border border-[#4ade80]/20 rounded-lg">
+                <p className="font-medium text-[#e8e8ed]">Live right now</p>
+                <p className="text-[#4ade80]">
+                  {sessions.filter((s) => s.isLive).length}
+                </p>
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="font-medium text-gray-900">You joined</p>
-                <p className="text-blue-700">{sessions.filter((s) => s.joined).length}</p>
+              <div className="p-3 bg-[#60a5fa]/10 border border-[#60a5fa]/20 rounded-lg">
+                <p className="font-medium text-[#e8e8ed]">You joined</p>
+                <p className="text-[#60a5fa]">
+                  {sessions.filter((s) => s.joined).length}
+                </p>
               </div>
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <p className="font-medium text-gray-900">Live Room Provider</p>
-                <p className="text-emerald-700">Jitsi Meet</p>
+              <div className="p-3 bg-[#34d399]/10 border border-[#34d399]/20 rounded-lg">
+                <p className="font-medium text-[#e8e8ed]">Live Room Provider</p>
+                <p className="text-[#34d399]">Jitsi Meet</p>
               </div>
-              <div className="text-xs text-gray-500 mt-1">Signed in as: {userLabel}</div>
+              <div className="text-xs text-[#5c5c72] mt-1">
+                Signed in as: {userLabel}
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Shared Materials</h2>
-            <p className="text-xs text-gray-500 mb-4">Add links for notes, docs, and references your group can use.</p>
+          <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6">
+            <h2 className="text-xl font-bold text-[#e8e8ed] mb-1">
+              Shared Materials
+            </h2>
+            <p className="text-xs text-[#5c5c72] mb-4">
+              Add links for notes, docs, and references your group can use.
+            </p>
 
             {joinedSessions.length > 0 ? (
               <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Session</label>
+                <label className="block text-xs font-medium text-[#8b8b9e] mb-1">
+                  Session
+                </label>
                 <select
                   value={selectedMaterialsSessionId}
-                  onChange={(e) => setSelectedMaterialsSessionId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                  onChange={(e) =>
+                    setSelectedMaterialsSessionId(e.target.value)
+                  }
+                  className="w-full px-3 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                 >
                   {joinedSessions.map((session) => (
                     <option key={session.id} value={session.id}>
@@ -974,7 +1241,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                 </select>
               </div>
             ) : (
-              <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-3 mb-3">
+              <div className="text-sm text-[#5c5c72] border border-dashed border-[#2a2a3a] rounded-lg p-3 mb-3">
                 Join a session to view and add shared materials.
               </div>
             )}
@@ -985,7 +1252,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                 value={newMaterialTitle}
                 onChange={(e) => setNewMaterialTitle(e.target.value)}
                 placeholder="Material title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                 disabled={!selectedMaterialsSession}
               />
               <input
@@ -993,13 +1260,13 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                 value={newMaterialUrl}
                 onChange={(e) => setNewMaterialUrl(e.target.value)}
                 placeholder="https://example.com/resource"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
                 disabled={!selectedMaterialsSession}
               />
               <button
                 type="submit"
                 disabled={!selectedMaterialsSession || savingMaterial}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-60"
+                className="w-full bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white px-3 py-2 rounded-lg text-sm disabled:opacity-60"
               >
                 {savingMaterial ? "Adding..." : "Add Material"}
               </button>
@@ -1007,10 +1274,10 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
 
             <div className="mb-4">
               <label
-                className={`w-full inline-flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm ${
+                className={`w-full inline-flex items-center justify-center gap-2 border border-[#2a2a3a] rounded-lg px-3 py-2 text-sm ${
                   selectedMaterialsSession && !uploadingMaterial
-                    ? "text-gray-700 hover:bg-gray-50 cursor-pointer"
-                    : "text-gray-400 cursor-not-allowed"
+                    ? "text-[#8b8b9e] hover:bg-[#1c1c27] hover:text-[#e8e8ed] cursor-pointer"
+                    : "text-[#5c5c72] cursor-not-allowed"
                 }`}
               >
                 <Upload className="w-4 h-4" />
@@ -1025,32 +1292,43 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
             </div>
 
             {materialsForSelectedSession.length === 0 ? (
-              <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-3">
-                {selectedMaterialsSession ? "No shared materials yet for this session." : "No session selected."}
+              <div className="text-sm text-[#5c5c72] border border-dashed border-[#2a2a3a] rounded-lg p-3">
+                {selectedMaterialsSession
+                  ? "No shared materials yet for this session."
+                  : "No session selected."}
               </div>
             ) : (
               <div className="space-y-2">
                 {materialsForSelectedSession.map((item) => (
-                  <div key={item.id} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div
+                    key={item.id}
+                    className="p-3 border border-[#2a2a3a] rounded-lg bg-[#1c1c27]"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                        <p className="text-sm font-medium text-[#e8e8ed] truncate">
+                          {item.title}
+                        </p>
                         <button
                           type="button"
                           onClick={() => handleOpenMaterial(item)}
                           disabled={openingMaterialId === item.id}
-                          className="text-xs text-blue-700 hover:text-blue-800 inline-flex items-center gap-1 truncate disabled:opacity-60"
+                          className="text-xs text-[#7c5cfc] hover:text-[#6a4ce0] inline-flex items-center gap-1 truncate disabled:opacity-60"
                         >
-                          {item.materialType === "file" ? <FileText className="w-3 h-3" /> : <ExternalLink className="w-3 h-3" />}
+                          {item.materialType === "file" ? (
+                            <FileText className="w-3 h-3" />
+                          ) : (
+                            <ExternalLink className="w-3 h-3" />
+                          )}
                           <span className="truncate">
                             {openingMaterialId === item.id
                               ? "Opening..."
                               : item.materialType === "file"
-                              ? item.fileName || item.title
-                              : item.url}
+                                ? item.fileName || item.title
+                                : item.url}
                           </span>
                         </button>
-                        <p className="text-[11px] text-gray-500 mt-1">
+                        <p className="text-[11px] text-[#5c5c72] mt-1">
                           {item.materialType === "file"
                             ? `${formatFileSize(item.fileSize)} • ${formatMaterialMeta(item)}`
                             : formatMaterialMeta(item)}
@@ -1060,7 +1338,7 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
                         type="button"
                         onClick={() => handleRemoveMaterial(item)}
                         disabled={removingMaterialId === item.id}
-                        className="text-red-600 hover:text-red-700 p-1 disabled:opacity-60"
+                        className="text-[#5c5c72] hover:text-[#ef4444] hover:bg-[#ef4444]/10 p-1 rounded-lg disabled:opacity-60"
                         aria-label="Remove material"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1071,8 +1349,73 @@ export default function GroupStudyPage({ userId, userLabel }: GroupStudyPageProp
               </div>
             )}
           </div>
+
+          {activeViewerMaterial && (
+            <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#e8e8ed]">
+                    Shared Viewer: {activeViewerMaterial.title}
+                  </h3>
+                  <p className="text-sm text-[#5c5c72]">
+                    Opened by {activeViewerMaterial.openedBy}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href={activeViewerMaterial.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[#7c5cfc] hover:text-[#6a4ce0] font-medium"
+                  >
+                    Open in new tab
+                  </a>
+                  <button
+                    onClick={() => setActiveViewerMaterial(null)}
+                    className="px-3 py-1.5 rounded-lg border border-[#2a2a3a] text-sm text-[#8b8b9e] hover:bg-[#1c1c27] hover:text-[#e8e8ed]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              {activeViewerMaterial.materialType === "file" &&
+              activeViewerMaterial.mimeType?.startsWith("image/") ? (
+                <img
+                  src={activeViewerMaterial.url}
+                  alt={activeViewerMaterial.title}
+                  className="max-h-[600px] w-full object-contain rounded-lg border border-[#2a2a3a]"
+                />
+              ) : (
+                <iframe
+                  src={activeViewerMaterial.url}
+                  title={activeViewerMaterial.title}
+                  className="w-full h-[600px] rounded-lg border border-[#2a2a3a]"
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingCloseSession !== null}
+        title="Close session?"
+        message={
+          pendingCloseSession
+            ? `"${pendingCloseSession.title}" will be closed for all members. This can't be undone.`
+            : ""
+        }
+        confirmLabel="Close session"
+        variant="danger"
+        busy={
+          pendingCloseSession !== null &&
+          closingSessionId === pendingCloseSession.id
+        }
+        onConfirm={confirmCloseSession}
+        onCancel={() => setPendingCloseSession(null)}
+      />
     </div>
   );
 }

@@ -94,22 +94,22 @@ export default function QuizzesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Quizzes</h1>
-          <p className="text-gray-600">Create and manage your practice quizzes</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">My Quizzes</h1>
+          <p className="text-[#8b8b9e]">Create and manage your practice quizzes</p>
         </div>
       </div>
 
-      <div className="bg-white border-2 border-purple-200 rounded-xl p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Generate New Quiz</h2>
-        <p className="text-gray-600 mb-4">Select an uploaded material to generate a custom quiz using AI.</p>
+      <div className="bg-[#16161e] border border-[#2a2a3a] rounded-xl p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-[#e8e8ed] mb-2">Generate New Quiz</h2>
+        <p className="text-[#8b8b9e] mb-4">Select an uploaded material to generate a custom quiz using AI.</p>
         
-        {error && <div className="text-red-600 bg-red-50 p-3 rounded-lg mb-4">{error}</div>}
+        {error && <div className="text-[#ef4444] bg-[#ef4444]/10 border border-[#ef4444]/20 p-3 rounded-lg mb-4">{error}</div>}
 
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <select 
             value={selectedMaterialId} 
             onChange={(e) => setSelectedMaterialId(e.target.value)}
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            className="flex-1 p-3 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] rounded-lg focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc] focus:outline-none"
           >
             {materials.length === 0 && <option value="">No materials available</option>}
             {materials.map(m => (
@@ -119,7 +119,7 @@ export default function QuizzesPage() {
           <button 
             onClick={handleGenerateRealQuiz}
             disabled={isGenerating || materials.length === 0}
-            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+            className="bg-[#7c5cfc] hover:bg-[#6a4ce0] disabled:opacity-50 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
           >
             {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
             {isGenerating ? "Generating Quiz..." : "Generate from Material"}
@@ -128,33 +128,33 @@ export default function QuizzesPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Your Quizzes ({quizzes.length})</h2>
+        <h2 className="text-xl font-bold text-[#e8e8ed] mb-4">Your Quizzes ({quizzes.length})</h2>
         {isLoading ? (
-          <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 text-purple-600 animate-spin" /></div>
+          <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 text-[#7c5cfc] animate-spin" /></div>
         ) : quizzes.length === 0 ? (
-          <div className="text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500">
+          <div className="text-center p-8 bg-[#1c1c27] rounded-xl border border-dashed border-[#2a2a3a] text-[#5c5c72]">
             No quizzes generated yet.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quizzes.map((quiz) => (
-              <div key={quiz.id} className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 hover:shadow-lg transition-shadow flex flex-col items-start justify-between">
+              <div key={quiz.id} className="bg-[#16161e] border border-[#2a2a3a] rounded-xl p-6 hover:shadow-lg hover:shadow-black/10 transition-shadow flex flex-col items-start justify-between">
                 <div className="w-full">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="bg-purple-600 rounded-lg p-3">
-                      <FileQuestion className="w-6 h-6 text-white" />
+                    <div className="bg-[#1c1c27] rounded-lg p-3">
+                      <FileQuestion className="w-6 h-6 text-[#7c5cfc]" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-1">{quiz.title}</h3>
-                  <p className="text-xs text-purple-700 font-medium mb-2">{quiz.topic}</p>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <h3 className="font-bold text-[#e8e8ed] mb-1">{quiz.title}</h3>
+                  <p className="text-xs text-[#8b8b9e] font-medium mb-2">{quiz.topic}</p>
+                  <p className="text-sm text-[#5c5c72] mb-4">
                     {quiz.questions ? quiz.questions.length : 0} questions • {quiz.created_at ? new Date(quiz.created_at).toLocaleDateString() : 'Just now'}
                   </p>
                 </div>
                 <div className="w-full flex items-center gap-2 mt-auto">
                   <button 
                     onClick={() => setActiveQuizId(quiz.id || null)}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors text-sm font-medium"
+                    className="flex-1 bg-[#7c5cfc] hover:bg-[#6a4ce0] text-white py-2 rounded-lg transition-colors text-sm font-medium"
                   >
                     Take Quiz
                   </button>

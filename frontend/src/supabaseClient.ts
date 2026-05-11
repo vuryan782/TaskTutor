@@ -10,3 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// TEMP DEBUG — remove later
+// @ts-ignore
+window.supabase = supabase;

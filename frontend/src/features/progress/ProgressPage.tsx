@@ -96,7 +96,7 @@ export default function ProgressPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#7c5cfc] animate-spin" />
       </div>
     );
   }
@@ -112,18 +112,18 @@ export default function ProgressPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Progress</h1>
-          <p className="text-gray-600">Track your learning journey with AI-powered insights</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Your Progress</h1>
+          <p className="text-[#8b8b9e]">Track your learning journey with AI-powered insights</p>
         </div>
 
         {/* View Mode Selector */}
-        <div className="flex p-1 bg-gray-100 rounded-xl max-w-fit shadow-inner">
+        <div className="flex p-1 bg-[#1c1c27] rounded-xl max-w-fit shadow-inner">
           <button
             onClick={() => setViewMode("overview")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               viewMode === "overview" 
-                ? "bg-white text-gray-900 shadow-sm" 
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -133,8 +133,8 @@ export default function ProgressPage() {
             onClick={() => setViewMode("scores")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               viewMode === "scores" 
-                ? "bg-white text-gray-900 shadow-sm" 
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
             }`}
           >
             <Activity className="w-4 h-4" />
@@ -144,8 +144,8 @@ export default function ProgressPage() {
             onClick={() => setViewMode("activity")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               viewMode === "activity" 
-                ? "bg-white text-gray-900 shadow-sm" 
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
             }`}
           >
             <BarChart2 className="w-4 h-4" />
@@ -157,60 +157,60 @@ export default function ProgressPage() {
       {viewMode === "overview" && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-              <div className="bg-gradient-to-br from-yellow-100 to-amber-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <FileQuestion className="w-8 h-8 text-amber-600" />
+            <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 text-center shadow-sm hover:shadow-lg hover:shadow-black/10 transition-shadow">
+              <div className="bg-[#f59e0b]/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <FileQuestion className="w-8 h-8 text-[#f59e0b]" />
               </div>
-              <p className="text-4xl font-bold text-gray-900 mb-1">{totalCompleted}</p>
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Quizzes Completed</p>
+              <p className="text-4xl font-bold text-[#e8e8ed] mb-1">{totalCompleted}</p>
+              <p className="text-sm font-medium text-[#5c5c72] uppercase tracking-wider">Quizzes Completed</p>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-              <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <TrendingUp className="w-8 h-8 text-emerald-600" />
+            <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 text-center shadow-sm hover:shadow-lg hover:shadow-black/10 transition-shadow">
+              <div className="bg-[#4ade80]/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <TrendingUp className="w-8 h-8 text-[#4ade80]" />
               </div>
-              <p className="text-4xl font-bold text-gray-900 mb-1">{avgScore}%</p>
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Average Score</p>
+              <p className="text-4xl font-bold text-[#e8e8ed] mb-1">{avgScore}%</p>
+              <p className="text-sm font-medium text-[#5c5c72] uppercase tracking-wider">Average Score</p>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-              <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <Calendar className="w-8 h-8 text-rose-600" />
+            <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 text-center shadow-sm hover:shadow-lg hover:shadow-black/10 transition-shadow">
+              <div className="bg-[#ef4444]/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <Calendar className="w-8 h-8 text-[#ef4444]" />
               </div>
-              <p className="text-4xl font-bold text-gray-900 mb-1">{currentStreak}</p>
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Day Streak</p>
+              <p className="text-4xl font-bold text-[#e8e8ed] mb-1">{currentStreak}</p>
+              <p className="text-sm font-medium text-[#5c5c72] uppercase tracking-wider">Day Streak</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Weekly Goal</h2>
+            <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#e8e8ed] mb-4">Weekly Goal</h2>
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Study Time Progress</span>
-                    <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">{studyTimeProgress}%</span>
+                    <span className="text-sm text-[#8b8b9e]">Study Time Progress</span>
+                    <span className="text-sm font-bold text-[#7c5cfc]">{studyTimeProgress}%</span>
                   </div>
-                  <div className="h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                  <div className="h-4 bg-[#1c1c27] rounded-full overflow-hidden shadow-inner">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-1000 ease-out relative"
+                      className="h-full bg-[#7c5cfc] rounded-full transition-all duration-1000 ease-out relative"
                       style={{ width: `${studyTimeProgress}%` }}
                     >
-                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                      <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+            <div className="bg-[#16161e] border border-[#2a2a3a] rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#e8e8ed] mb-3 flex items-center">
+                <span className="text-[#7c5cfc]">
                   AI Feedback
                 </span>
               </h2>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-5 border border-purple-100 shadow-sm">
-                <p className="text-sm text-gray-700 leading-relaxed font-medium">
+              <div className="bg-[#1c1c27] rounded-lg p-5 border border-[#2a2a3a] shadow-sm">
+                <p className="text-sm text-[#e8e8ed] leading-relaxed font-medium">
                   {totalCompleted === 0 ? (
                     "You haven't completed any quizzes yet! Generate and take your first quiz to get started."
                   ) : avgScore >= 80 ? (
@@ -226,42 +226,43 @@ export default function ProgressPage() {
       )}
 
       {viewMode === "scores" && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Score History</h2>
-            <p className="text-sm text-gray-500">Your performance across recent quizzes</p>
+            <h2 className="text-xl font-bold text-[#e8e8ed]">Score History</h2>
+            <p className="text-sm text-[#5c5c72]">Your performance across recent quizzes</p>
           </div>
           
           {scoreData.length > 0 ? (
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={scoreData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
+                    tick={{ fill: '#8b8b9e', fontSize: 12 }} 
                     dy={10}
                   />
                   <YAxis 
                     domain={[0, 100]} 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
+                    tick={{ fill: '#8b8b9e', fontSize: 12 }} 
                     dx={-10}
                   />
                   <RechartsTooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                    labelStyle={{ fontWeight: 'bold', color: '#111827', marginBottom: '4px' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #2a2a3a', backgroundColor: '#1c1c27', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)' }}
+                    labelStyle={{ fontWeight: 'bold', color: '#e8e8ed', marginBottom: '4px' }}
+                    itemStyle={{ color: '#e8e8ed' }}
                     formatter={(value: any) => [`${value}%`, 'Score']}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="score" 
-                    stroke="#8b5cf6" 
+                    stroke="#7c5cfc" 
                     strokeWidth={3}
-                    dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#fff' }}
+                    dot={{ fill: '#7c5cfc', strokeWidth: 2, r: 4, stroke: '#16161e' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                     animationDuration={1500}
                   />
@@ -269,7 +270,7 @@ export default function ProgressPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+            <div className="h-64 flex flex-col items-center justify-center text-[#5c5c72]">
               <Activity className="w-12 h-12 mb-3 opacity-20" />
               <p>No quiz scores available yet.</p>
             </div>
@@ -278,39 +279,40 @@ export default function ProgressPage() {
       )}
 
       {viewMode === "activity" && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a] p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Study Activity</h2>
-            <p className="text-sm text-gray-500">Number of quizzes completed per day</p>
+            <h2 className="text-xl font-bold text-[#e8e8ed]">Study Activity</h2>
+            <p className="text-sm text-[#5c5c72]">Number of quizzes completed per day</p>
           </div>
           
           {activityData.length > 0 ? (
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={activityData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" vertical={false} />
                   <XAxis 
                     dataKey="date" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
+                    tick={{ fill: '#8b8b9e', fontSize: 12 }} 
                     dy={10}
                   />
                   <YAxis 
                     allowDecimals={false}
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
+                    tick={{ fill: '#8b8b9e', fontSize: 12 }} 
                     dx={-10}
                   />
                   <RechartsTooltip 
-                    cursor={{ fill: '#f3f4f6' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                    labelStyle={{ fontWeight: 'bold', color: '#111827', marginBottom: '4px' }}
+                    cursor={{ fill: '#222233' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #2a2a3a', backgroundColor: '#1c1c27', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)' }}
+                    labelStyle={{ fontWeight: 'bold', color: '#e8e8ed', marginBottom: '4px' }}
+                    itemStyle={{ color: '#e8e8ed' }}
                   />
                   <Bar 
                     dataKey="quizzes" 
-                    fill="#3b82f6" 
+                    fill="#7c5cfc" 
                     radius={[4, 4, 0, 0]} 
                     animationDuration={1500}
                   />
@@ -318,7 +320,7 @@ export default function ProgressPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+            <div className="h-64 flex flex-col items-center justify-center text-[#5c5c72]">
               <BarChart2 className="w-12 h-12 mb-3 opacity-20" />
               <p>No activity data available yet.</p>
             </div>

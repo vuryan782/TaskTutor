@@ -1,42 +1,281 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ── App background: deep-night base + layered mystical glows ─────── */
+
+html,
+body {
+  background-color: #07050f;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app-bg {
+  position: relative;
+  background-color: #07050f;
+  background-image:
+    /* Warm violet moonlight, top-left */
+    radial-gradient(
+      ellipse 75% 65% at 15% -10%,
+      rgba(155, 93, 229, 0.28),
+      transparent 62%
+    ),
+    /* Deep magenta wisp, top-right */
+    radial-gradient(
+      ellipse 45% 55% at 100% -10%,
+      rgba(188, 70, 220, 0.18),
+      transparent 60%
+    ),
+    /* Rich purple ambient, bottom-right */
+    radial-gradient(
+      ellipse 60% 65% at 110% 110%,
+      rgba(106, 76, 224, 0.24),
+      transparent 58%
+    ),
+    /* Cool indigo undertone, bottom-left */
+    radial-gradient(
+      ellipse 55% 60% at -5% 95%,
+      rgba(67, 56, 202, 0.2),
+      transparent 60%
+    ),
+    /* Central haze */
+    radial-gradient(
+      ellipse 50% 45% at 50% 55%,
+      rgba(58, 38, 110, 0.15),
+      transparent 70%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Twinkling starfield — split across ::before and ::after so they
+   twinkle out-of-phase and feel natural. Fixed to the viewport. */
+.app-bg::before,
+.app-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-repeat: no-repeat;
+  will-change: opacity;
+}
+
+.app-bg::before {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 48% 12%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 78% 28%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 35% 40%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 92% 45%, rgba(255, 255, 255, 0.4), transparent);
+  animation: tt-twinkle-a 5.5s ease-in-out infinite;
+}
+
+.app-bg::after {
+  background-image:
+    radial-gradient(1px 1px at 27% 72%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 63% 55%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 88% 82%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 7% 60%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 55% 88%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 20% 5%, rgba(255, 255, 255, 0.3), transparent);
+  animation: tt-twinkle-b 7s ease-in-out infinite;
+  animation-delay: -2.3s;
+}
+
+@keyframes tt-twinkle-a {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes tt-twinkle-b {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Only lift the main layout children above the ambient background layers.
+   The chatbot widget, search palette, and celebration bursts manage their
+   own stacking (z-50+) and must not be swept up by a universal rule. */
+.app-bg > aside,
+.app-bg > .app-shell {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Cursor-following spotlight ──────────────────────────────────── */
+
+.app-spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    600px circle at var(--tt-mouse-x, 50%) var(--tt-mouse-y, 50%),
+    rgba(124, 92, 252, 0.14),
+    rgba(155, 93, 229, 0.06) 40%,
+    transparent 70%
+  );
+  transition: opacity 0.3s ease;
+}
+
+/* ── Celebration particle burst ───────────────────────────────────── */
+
+.tt-celebrate {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.tt-celebrate__particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Tone down the ambient glow when reduce-motion or high-contrast is on
+   so the UI stays crisp and readable. */
+[data-reduce-motion="true"] .app-bg,
+.a11y-high-contrast.app-bg,
+.app-bg.a11y-high-contrast {
+  background-image: none;
+  background-color: #07050f;
+}
+
+[data-reduce-motion="true"] .app-bg::before,
+.a11y-high-contrast.app-bg::before,
+.app-bg.a11y-high-contrast::before,
+[data-reduce-motion="true"] .app-bg::after,
+.a11y-high-contrast.app-bg::after,
+.app-bg.a11y-high-contrast::after,
+[data-reduce-motion="true"] .app-spotlight,
+.a11y-high-contrast .app-spotlight {
+  display: none;
+}
+
+/* ── High Contrast — boosts contrast on the already-dark theme ──── */
+
+.a11y-high-contrast {
+  --hc-text: #ffffff;
+  --hc-border: #4a4a6a;
+}
+
+.a11y-high-contrast * {
+  color: var(--hc-text) !important;
+}
+
+.a11y-high-contrast input,
+.a11y-high-contrast textarea,
+.a11y-high-contrast select {
+  border-color: var(--hc-border) !important;
+  color: #ffffff !important;
+}
+
+.a11y-high-contrast [class*="border-"] {
+  border-color: var(--hc-border) !important;
+}
+
+.a11y-high-contrast [class*="text-[#8b8b9e]"] { color: #c8c8da !important; }
+.a11y-high-contrast [class*="text-[#5c5c72]"] { color: #9e9eb8 !important; }
+
+/* ── Chatbot prose styling ─────────────────────────────────────── */
+
+.chatbot-prose {
+  color: #e8e8ed;
+  line-height: 1.65;
+  font-size: 0.875rem;
+}
+
+.chatbot-prose p {
+  margin-bottom: 0.75rem;
+}
+
+.chatbot-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.chatbot-prose strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.chatbot-prose em {
+  color: #b8b8ce;
+}
+
+.chatbot-prose code {
+  background-color: #1c1c27;
+  border: 1px solid #2a2a3a;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.8125rem;
+  color: #c9b4ff;
+}
+
+.chatbot-prose pre {
+  background-color: #1c1c27;
+  border: 1px solid #2a2a3a;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.chatbot-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  color: #e8e8ed;
+}
+
+.chatbot-prose ul,
+.chatbot-prose ol {
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.chatbot-prose li {
+  margin-bottom: 0.25rem;
+}
+
+.chatbot-prose a {
+  color: #7c5cfc;
+  text-decoration: underline;
+}
+
+.chatbot-prose a:hover {
+  color: #9b82fc;
+}
+
+.chatbot-prose h1,
+.chatbot-prose h2,
+.chatbot-prose h3 {
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chatbot-prose h1 { font-size: 1.25rem; }
+.chatbot-prose h2 { font-size: 1.125rem; }
+.chatbot-prose h3 { font-size: 1rem; }
+
+/* ── Reduce Motion — triggered via data-reduce-motion on <html> ── */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Also respect the OS-level preference automatically */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }

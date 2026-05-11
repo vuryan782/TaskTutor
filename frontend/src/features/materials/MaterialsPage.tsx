@@ -91,13 +91,13 @@ export default function MaterialsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Materials</h1>
-          <p className="text-gray-600">Manage and organize your learning resources</p>
+          <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Study Materials</h1>
+          <p className="text-[#8b8b9e]">Manage and organize your learning resources</p>
         </div>
         <button 
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#7c5cfc] hover:bg-[#6a4ce0] disabled:opacity-50 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
         >
           {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
           {isUploading ? "Uploading..." : "Upload Files"}
@@ -119,58 +119,58 @@ export default function MaterialsPage() {
 
       <div 
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+        className="border-2 border-dashed border-[#2a2a3a] rounded-xl p-12 text-center bg-[#1c1c27] hover:bg-[#222233] transition-colors cursor-pointer"
       >
         <div className="flex flex-col items-center gap-3">
-          <div className="bg-blue-100 rounded-full p-4">
-            <Upload className="w-8 h-8 text-blue-600" />
+          <div className="bg-[#7c5cfc]/10 rounded-full p-4">
+            <Upload className="w-8 h-8 text-[#7c5cfc]" />
           </div>
           <div>
-            <p className="text-gray-900 font-medium mb-1">Drop files here or click to browse</p>
-            <p className="text-sm text-gray-500">PDF, DOCX, TXT supported (Max 10MB)</p>
+            <p className="text-[#e8e8ed] font-medium mb-1">Drop files here or click to browse</p>
+            <p className="text-sm text-[#5c5c72]">PDF, DOCX, TXT supported (Max 10MB)</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-[#16161e] rounded-xl border border-[#2a2a3a]">
+        <div className="p-6 border-b border-[#2a2a3a]">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Your Materials ({materials.length})</h2>
+            <h2 className="text-xl font-bold text-[#e8e8ed]">Your Materials ({materials.length})</h2>
             <div className="relative">
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-5 h-5 text-[#5c5c72] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search materials..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 bg-[#1c1c27] border border-[#2a2a3a] text-[#e8e8ed] placeholder:text-[#5c5c72] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7c5cfc]/50 focus:border-[#7c5cfc]"
               />
             </div>
           </div>
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-[#2a2a3a]">
           {isLoading ? (
             <div className="p-6 flex justify-center">
-              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              <Loader2 className="w-8 h-8 text-[#7c5cfc] animate-spin" />
             </div>
           ) : materials.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
+            <div className="p-6 text-center text-[#5c5c72]">
               No materials yet. Upload one above!
             </div>
           ) : (
             materials.map((material) => (
-              <div key={material.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={material.id} className="p-6 hover:bg-[#1c1c27] transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-[#7c5cfc]/10 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-6 h-6 text-[#7c5cfc]" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{material.title}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-[#e8e8ed]">{material.title}</p>
+                      <p className="text-sm text-[#5c5c72]">
                         {formatSize(material.size_bytes)} • {new Date(material.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                  <button className="text-[#7c5cfc] hover:text-[#6a4ce0] flex items-center gap-1">
                     View <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
