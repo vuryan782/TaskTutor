@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, type Schema } from '@google/genai';
 import type { Quiz } from '../../types/study';
 
 export async function generateQuizFromNotes(notes: string): Promise<Quiz> {
@@ -9,7 +9,7 @@ export async function generateQuizFromNotes(notes: string): Promise<Quiz> {
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const responseSchema: Type = {
+  const responseSchema: Schema = {
     type: Type.OBJECT,
     properties: {
       title: {
