@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, ChevronRight, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, ChevronRight, XCircle, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "../../supabaseClient";
-import type { Quiz, Question } from "../../types/study";
+import type { Quiz } from "../../types/study";
+import { generateTutorFeedback } from "./generateTutorFeedback";
 
 interface TakeQuizProps {
   quizId: string;
@@ -18,6 +19,11 @@ export default function TakeQuiz({ quizId, onBack }: TakeQuizProps) {
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [tutorLoading, setTutorLoading] = useState<Record<number, boolean>>({});
+  const [tutorFeedback, setTutorFeedback] = useState<Record<number, string>>({});
+  const [materialBase64Cache, setMaterialBase64Cache] = useState<string | null>(null);
+  const [materialMimeCache, setMaterialMimeCache] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQuiz();
@@ -91,6 +97,64 @@ export default function TakeQuiz({ quizId, onBack }: TakeQuizProps) {
       console.error("Failed to save score", err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAskTutor = async (questionIndex: number) => {
+    if (!quiz || !quiz.material_id) return;
+    
+    setTutorLoading(prev => ({ ...prev, [questionIndex]: true }));
+    try {
+      let notesBase64 = materialBase64Cache;
+      let mimeType = materialMimeCache;
+      
+      if (!notesBase64 || !mimeType) {
+        const { data: material, error: matError } = await supabase
+          .from("materials")
+          .select("file_url, file_type")
+          .eq("id", quiz.material_id)
+          .single();
+        if (matError || !material) throw new Error("Could not find material");
+
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from("study-materials")
+          .download(material.file_url);
+
+        if (downloadError || !fileData) throw new Error("Could not download notes");
+        
+        notesBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(',')[1] || result);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(fileData);
+        });
+        mimeType = fileData.type;
+        if (!mimeType || mimeType === "application/octet-stream" || !mimeType.includes("/")) {
+          const ext = material.file_type?.toLowerCase();
+          if (ext === "pdf") mimeType = "application/pdf";
+          else if (ext === "txt") mimeType = "text/plain";
+          else if (ext === "docx") mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+          else mimeType = "application/pdf";
+        }
+        
+        setMaterialBase64Cache(notesBase64);
+        setMaterialMimeCache(mimeType);
+      }
+
+      const q = quiz.questions[questionIndex];
+      const userAnswer = q.options[selectedOptions[questionIndex]];
+      const correctAnswer = q.options[q.correctAnswerIndex];
+
+      const feedback = await generateTutorFeedback(notesBase64!, mimeType!, q.text, userAnswer, correctAnswer);
+      setTutorFeedback(prev => ({ ...prev, [questionIndex]: feedback }));
+    } catch (err) {
+      console.error(err);
+      setTutorFeedback(prev => ({ ...prev, [questionIndex]: "Failed to get AI Tutor feedback. Please try again." }));
+    } finally {
+      setTutorLoading(prev => ({ ...prev, [questionIndex]: false }));
     }
   };
 
@@ -172,6 +236,31 @@ export default function TakeQuiz({ quizId, onBack }: TakeQuizProps) {
                     </div>
                   </div>
                 </div>
+                {!isCorrect && (
+                  <div className="mt-4 border-t border-red-200 pt-4">
+                    {tutorFeedback[idx] ? (
+                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <div className="flex items-center gap-2 text-purple-700 font-bold mb-2">
+                          <Sparkles className="w-4 h-4" /> AI Tutor Feedback
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed">{tutorFeedback[idx]}</p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleAskTutor(idx)}
+                        disabled={tutorLoading[idx]}
+                        className="flex items-center gap-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {tutorLoading[idx] ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                        {tutorLoading[idx] ? "Asking AI Tutor..." : "Ask AI Tutor"}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}

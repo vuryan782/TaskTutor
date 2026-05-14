@@ -50,7 +50,7 @@ export default function MaterialsPage() {
       // Upload to storage
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
-      
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("study-materials")
         .upload(fileName, file);
@@ -81,6 +81,26 @@ export default function MaterialsPage() {
     }
   };
 
+  const handleDeleteMaterial = async (material: Material) => {
+    if (!window.confirm("Are you sure you want to delete this material? This may delete associated quizzes.")) return;
+    
+    setError(null);
+    try {
+      if (material.file_url) {
+        // Try to remove from storage, ignore error if file not found
+        await supabase.storage.from("study-materials").remove([material.file_url]);
+      }
+      
+      const { error: dbError } = await supabase.from("materials").delete().eq("id", material.id);
+      if (dbError) throw dbError;
+      
+      setMaterials(prev => prev.filter(m => m.id !== material.id));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to delete material");
+    }
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
@@ -94,7 +114,7 @@ export default function MaterialsPage() {
           <h1 className="text-3xl font-bold text-[#e8e8ed] mb-2">Study Materials</h1>
           <p className="text-[#8b8b9e]">Manage and organize your learning resources</p>
         </div>
-        <button 
+        <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="bg-[#7c5cfc] hover:bg-[#6a4ce0] disabled:opacity-50 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
@@ -102,12 +122,12 @@ export default function MaterialsPage() {
           {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
           {isUploading ? "Uploading..." : "Upload Files"}
         </button>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
+        <input
+          type="file"
+          ref={fileInputRef}
           onChange={handleFileUpload}
-          className="hidden" 
-          accept=".pdf,.docx,.txt" 
+          className="hidden"
+          accept=".pdf,.docx,.txt"
         />
       </div>
 
@@ -117,7 +137,7 @@ export default function MaterialsPage() {
         </div>
       )}
 
-      <div 
+      <div
         onClick={() => fileInputRef.current?.click()}
         className="border-2 border-dashed border-[#2a2a3a] rounded-xl p-12 text-center bg-[#1c1c27] hover:bg-[#222233] transition-colors cursor-pointer"
       >
@@ -170,9 +190,18 @@ export default function MaterialsPage() {
                       </p>
                     </div>
                   </div>
-                  <button className="text-[#7c5cfc] hover:text-[#6a4ce0] flex items-center gap-1">
-                    View <ChevronRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button className="text-[#7c5cfc] hover:text-[#6a4ce0] flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-[#7c5cfc]/10 transition-colors">
+                      View <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteMaterial(material)}
+                      className="text-[#ef4444] hover:text-[#dc2626] flex items-center justify-center p-2 rounded-lg hover:bg-[#ef4444]/10 transition-colors"
+                      title="Delete material"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

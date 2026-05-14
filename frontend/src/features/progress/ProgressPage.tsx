@@ -1,18 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
-import { Calendar, FileQuestion, TrendingUp, Loader2, LayoutDashboard, Activity, BarChart2 } from "lucide-react";
+import { Calendar, FileQuestion, TrendingUp, Loader2, LayoutDashboard, Activity, BarChart2, Clock } from "lucide-react";
 import { supabase } from "../../supabaseClient";
 import type { QuizResult } from "../../types/study";
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer 
 } from "recharts";
-import { format, parseISO, differenceInDays, startOfDay } from "date-fns";
+import { format, parseISO, differenceInDays, startOfDay, subDays, subMonths } from "date-fns";
 
 type ViewMode = "overview" | "scores" | "activity";
+type TimeFilter = "all" | "week" | "month";
 
 export default function ProgressPage() {
   const [results, setResults] = useState<QuizResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
 
   useEffect(() => {
     fetchResults();
@@ -21,7 +23,7 @@ export default function ProgressPage() {
   const fetchResults = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.from("quiz_results").select("*").order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("quiz_results").select("*, quizzes(topic)").order("created_at", { ascending: true });
       if (error) throw error;
       setResults(data || []);
     } catch (err) {
@@ -30,6 +32,17 @@ export default function ProgressPage() {
       setIsLoading(false);
     }
   };
+
+  const filteredResults = useMemo(() => {
+    if (timeFilter === "all") return results;
+    
+    const now = new Date();
+    const cutoff = timeFilter === "week" 
+      ? subDays(now, 7)
+      : subMonths(now, 1);
+      
+    return results.filter(r => r.created_at && new Date(r.created_at) >= cutoff);
+  }, [results, timeFilter]);
 
   const currentStreak = useMemo(() => {
     if (!results.length) return 0;
@@ -64,22 +77,22 @@ export default function ProgressPage() {
     }
   
     return streak;
-  }, [results]);
+  }, [results]); // Streak always uses all results
   
   const scoreData = useMemo(() => {
-    if (!results.length) return [];
-    return results.map((r, i) => ({
+    if (!filteredResults.length) return [];
+    return filteredResults.map((r, i) => ({
       name: `Quiz ${i + 1}`,
       score: Math.round((r.score / r.total_questions) * 100),
       date: r.created_at ? format(parseISO(r.created_at), 'MMM dd') : 'Unknown'
     }));
-  }, [results]);
+  }, [filteredResults]);
   
   const activityData = useMemo(() => {
-    if (!results.length) return [];
+    if (!filteredResults.length) return [];
     
     const counts: Record<string, number> = {};
-    results.forEach(r => {
+    filteredResults.forEach(r => {
       if (!r.created_at) return;
       const dateStr = format(parseISO(r.created_at), 'MMM dd');
       counts[dateStr] = (counts[dateStr] || 0) + 1;
@@ -87,11 +100,37 @@ export default function ProgressPage() {
   
     // Sort dates
     return Object.keys(counts)
-      .map(date => ({
-        date,
-        quizzes: counts[date]
-      }));
-  }, [results]);
+      .map(date => {
+        return {
+          date,
+          quizzes: counts[date]
+        };
+      });
+  }, [filteredResults]);
+
+  const weakestTopic = useMemo(() => {
+    if (!filteredResults.length) return null;
+    const stats: Record<string, { totalScore: number; maxScore: number; count: number }> = {};
+    filteredResults.forEach(r => {
+      const topic = r.quizzes?.topic;
+      if (!topic) return;
+      if (!stats[topic]) {
+        stats[topic] = { totalScore: 0, maxScore: 0, count: 0 };
+      }
+      stats[topic].totalScore += r.score;
+      stats[topic].maxScore += r.total_questions;
+      stats[topic].count += 1;
+    });
+    
+    const topicStats = Object.keys(stats).map(topic => {
+      const { totalScore, maxScore, count } = stats[topic];
+      const avgPercent = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+      return { topic, avgPercent, count };
+    });
+
+    if (topicStats.length === 0) return null;
+    return topicStats.reduce((min, curr) => curr.avgPercent < min.avgPercent ? curr : min, topicStats[0]);
+  }, [filteredResults]);
 
   if (isLoading) {
     return (
@@ -101,10 +140,10 @@ export default function ProgressPage() {
     );
   }
 
-  const totalCompleted = results.length;
+  const totalCompleted = filteredResults.length;
   
   const avgScore = totalCompleted === 0 ? 0 : 
-    Math.round(results.reduce((acc, curr) => acc + (curr.score / curr.total_questions), 0) / totalCompleted * 100);
+    Math.round(filteredResults.reduce((acc, curr) => acc + (curr.score / curr.total_questions), 0) / totalCompleted * 100);
 
   const studyTimeProgress = Math.min(totalCompleted * 15, 100);
 
@@ -116,41 +155,77 @@ export default function ProgressPage() {
           <p className="text-[#8b8b9e]">Track your learning journey with AI-powered insights</p>
         </div>
 
-        {/* View Mode Selector */}
-        <div className="flex p-1 bg-[#1c1c27] rounded-xl max-w-fit shadow-inner">
-          <button
-            onClick={() => setViewMode("overview")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              viewMode === "overview" 
-                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
-                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Overview</span>
-          </button>
-          <button
-            onClick={() => setViewMode("scores")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              viewMode === "scores" 
-                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
-                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
-            }`}
-          >
-            <Activity className="w-4 h-4" />
-            <span>Scores</span>
-          </button>
-          <button
-            onClick={() => setViewMode("activity")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              viewMode === "activity" 
-                ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
-                : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
-            }`}
-          >
-            <BarChart2 className="w-4 h-4" />
-            <span>Activity</span>
-          </button>
+        <div className="flex flex-col sm:flex-row items-end gap-3">
+          {/* Time Filter Selector */}
+          <div className="flex p-1 bg-[#1c1c27] rounded-xl max-w-fit shadow-inner">
+            <button
+              onClick={() => setTimeFilter("all")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                timeFilter === "all" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <span>All Time</span>
+            </button>
+            <button
+              onClick={() => setTimeFilter("month")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                timeFilter === "month" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <span>Past Month</span>
+            </button>
+            <button
+              onClick={() => setTimeFilter("week")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                timeFilter === "week" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <span>Past Week</span>
+            </button>
+          </div>
+
+          {/* View Mode Selector */}
+          <div className="flex p-1 bg-[#1c1c27] rounded-xl max-w-fit shadow-inner">
+            <button
+              onClick={() => setViewMode("overview")}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === "overview" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden sm:inline">Overview</span>
+            </button>
+            <button
+              onClick={() => setViewMode("scores")}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === "scores" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Scores</span>
+            </button>
+            <button
+              onClick={() => setViewMode("activity")}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === "activity" 
+                  ? "bg-[#2a2a3a] text-[#e8e8ed] shadow-sm" 
+                  : "text-[#5c5c72] hover:text-[#e8e8ed] hover:bg-[#222233]"
+              }`}
+            >
+              <BarChart2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Activity</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -212,9 +287,14 @@ export default function ProgressPage() {
               <div className="bg-[#1c1c27] rounded-lg p-5 border border-[#2a2a3a] shadow-sm">
                 <p className="text-sm text-[#e8e8ed] leading-relaxed font-medium">
                   {totalCompleted === 0 ? (
-                    "You haven't completed any quizzes yet! Generate and take your first quiz to get started."
+                    "You haven't completed any quizzes in this period! Generate and take some quizzes to track your progress."
+                  ) : weakestTopic && weakestTopic.avgPercent < 80 ? (
+                    <span>
+                      You're doing well overall, but you seem to be struggling with <strong className="text-[#f59e0b]">{weakestTopic.topic}</strong> (Average: {weakestTopic.avgPercent}%). 
+                      Consider reviewing your notes or generating more practice quizzes on this topic to improve.
+                    </span>
                   ) : avgScore >= 80 ? (
-                    "Great progress! You're consistently scoring well. Keep up the excellent work! 🎉"
+                    "Great progress! You're consistently scoring well across all topics. Keep up the excellent work! 🎉"
                   ) : (
                     "You're making steady progress. Consider generating some more quizzes on the topics you scored lower in to strengthen your weak areas."
                   )}
@@ -272,7 +352,7 @@ export default function ProgressPage() {
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-[#5c5c72]">
               <Activity className="w-12 h-12 mb-3 opacity-20" />
-              <p>No quiz scores available yet.</p>
+              <p>No quiz scores available for this period.</p>
             </div>
           )}
         </div>
@@ -322,7 +402,7 @@ export default function ProgressPage() {
           ) : (
             <div className="h-64 flex flex-col items-center justify-center text-[#5c5c72]">
               <BarChart2 className="w-12 h-12 mb-3 opacity-20" />
-              <p>No activity data available yet.</p>
+              <p>No activity data available for this period.</p>
             </div>
           )}
         </div>

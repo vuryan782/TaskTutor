@@ -56,4 +56,7 @@ export interface QuizResult {
   score: number;
   total_questions: number;
   created_at: string;
+  quizzes?: {
+    topic: string;
+  };
 }

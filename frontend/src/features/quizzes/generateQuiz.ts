@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type, type Schema } from '@google/genai';
 import type { Quiz } from '../../types/study';
 
-export async function generateQuizFromNotes(notes: string): Promise<Quiz> {
+export async function generateQuizFromMaterial(base64Data: string, mimeType: string, title: string): Promise<Quiz> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("Missing VITE_GEMINI_API_KEY");
@@ -45,9 +45,18 @@ export async function generateQuizFromNotes(notes: string): Promise<Quiz> {
     required: ["title", "topic", "questions"],
   };
 
+  const prompt = `Generate a 5-question multiple choice quiz based strictly on the provided material titled "${title}". Ensure all output follows the requested JSON schema.`;
+
+  const documentPart = {
+    inlineData: {
+      data: base64Data,
+      mimeType: mimeType,
+    },
+  };
+
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Generate a 5-question multiple choice quiz based strictly on the following notes. Ensure all output follows the requested JSON schema. Notes:\n\n${notes}`,
+    contents: [prompt, documentPart],
     config: {
       responseMimeType: "application/json",
       responseSchema: responseSchema,

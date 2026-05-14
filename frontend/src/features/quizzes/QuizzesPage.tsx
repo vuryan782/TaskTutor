@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { FileQuestion, Menu, Plus, Play, Loader2, ArrowRight } from "lucide-react";
-import { generateQuizFromNotes } from "./generateQuiz";
+import { FileQuestion, Menu, Plus, Play, Loader2, ArrowRight, Trash2 } from "lucide-react";
+import { generateQuizFromMaterial } from "./generateQuiz";
 import type { Quiz, Material } from "../../types/study";
 import { supabase } from "../../supabaseClient";
 import TakeQuiz from "./TakeQuiz";
@@ -60,9 +60,26 @@ export default function QuizzesPage() {
       if (downloadError) throw downloadError;
       if (!fileData) throw new Error("Could not download file content");
 
-      const text = await fileData.text();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1] || result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(fileData);
+      });
 
-      const quizData = await generateQuizFromNotes(`Title: ${material.title}\n\nContents: ${text}`);
+      let mimeType = fileData.type;
+      if (!mimeType || mimeType === "application/octet-stream" || !mimeType.includes("/")) {
+        const ext = material.file_type?.toLowerCase();
+        if (ext === "pdf") mimeType = "application/pdf";
+        else if (ext === "txt") mimeType = "text/plain";
+        else if (ext === "docx") mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        else mimeType = "application/pdf";
+      }
+
+      const quizData = await generateQuizFromMaterial(base64Data, mimeType, material.title);
 
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
@@ -83,6 +100,21 @@ export default function QuizzesPage() {
       setError(err.message || "Quiz generation failed");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleDeleteQuiz = async (quizId: string) => {
+    if (!window.confirm("Are you sure you want to delete this quiz? Your results will also be deleted.")) return;
+    
+    setError(null);
+    try {
+      const { error: dbError } = await supabase.from("quizzes").delete().eq("id", quizId);
+      if (dbError) throw dbError;
+      
+      setQuizzes(prev => prev.filter(q => q.id !== quizId));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to delete quiz");
     }
   };
 
@@ -157,6 +189,13 @@ export default function QuizzesPage() {
                     className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors text-sm font-medium"
                   >
                     Take Quiz
+                  </button>
+                  <button
+                    onClick={() => quiz.id && handleDeleteQuiz(quiz.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Quiz"
+                  >
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>

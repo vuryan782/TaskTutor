@@ -28,10 +28,12 @@ type TaskRow = {
 
 type QuizResultRow = {
   id: string;
-  subject: string;
-  topic: string;
   score: number;
+  total_questions: number;
   created_at: string;
+  quizzes?: {
+    topic: string;
+  };
 };
 
 type GroupSessionRow = {
@@ -214,7 +216,7 @@ export default function HomePage({ userId, onNavigate }: HomePageProps) {
             .limit(3),
           supabase
             .from("quiz_results")
-            .select("id, subject, topic, score, created_at")
+            .select("id, score, total_questions, created_at, quizzes(topic)")
             .eq("user_id", userId)
             .order("created_at", { ascending: false })
             .limit(100),
@@ -263,10 +265,12 @@ export default function HomePage({ userId, onNavigate }: HomePageProps) {
   const recentActivity = useMemo<ActivityItem[]>(() => {
     const items: ActivityItem[] = [];
     for (const q of quizResults.slice(0, 5)) {
+      const topicName = q.quizzes?.topic || "Study";
+      const percent = q.total_questions ? Math.round((q.score / q.total_questions) * 100) : 0;
       items.push({
         key: `quiz-${q.id}`,
         kind: "quiz",
-        title: `Completed ${q.topic || q.subject} quiz · ${q.score}%`,
+        title: `Completed ${topicName} quiz · ${percent}%`,
         whenIso: q.created_at,
         accent: "bg-[#a78bfa]",
         target: "quizzes",
